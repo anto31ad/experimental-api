@@ -1,8 +1,10 @@
 import pickle
+import logging
 
 from http import HTTPStatus
 from fastapi import FastAPI
 from pydantic import BaseModel
+
 
 class Flower(BaseModel):
     sepal_length: float = 0
@@ -10,8 +12,8 @@ class Flower(BaseModel):
     petal_length: float = 0
     petal_width: float = 0
 
-
 app = FastAPI()
+logger = logging.getLogger("uvicorn")
 
 @app.get("/")
 async def root():
@@ -21,6 +23,7 @@ async def root():
 def predict(features: Flower):
 
     with open('data/model.pkl', 'rb') as file:
+        logger.info("Attempting to load model")
         model = pickle.load(file)
 
     raw_prediction = model.predict(
