@@ -2,15 +2,12 @@ import pickle
 import logging
 
 from http import HTTPStatus
-from fastapi import FastAPI
-from pydantic import BaseModel
+from typing import Annotated
+from fastapi import FastAPI, Depends, HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
 
-
-class Flower(BaseModel):
-    sepal_length: float = 0
-    sepal_width: float = 0
-    petal_length: float = 0
-    petal_width: float = 0
+import auth
+from schema import User, UserInDB, Flower, FAKE_USERS_DB
 
 app = FastAPI()
 logger = logging.getLogger("uvicorn")
@@ -19,8 +16,34 @@ logger = logging.getLogger("uvicorn")
 async def root():
     return {"message": "Hello World"}
 
+@app.post("/token")
+async def login(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
+):
+    user_dict = FAKE_USERS_DB.get(form_data.username)
+
+    if not user_dict:
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
+    user = UserInDB(**user_dict)
+
+    hashed_password = auth.hash_password(form_data.password)
+
+    if not hashed_password == user.password:
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
+
+    return {"access_token": user.username, "token_type": "bearer"}
+
+@app.get("/users/me")
+async def read_current_user(
+    current_user: Annotated[User, Depends(auth.get_current_user)]
+):
+    return current_user
+
 @app.post("/predict")
-def predict(features: Flower):
+def predict(
+    features: Flower,
+    token: Annotated[str, Depends(auth.oauth2_scheme)]
+):
 
     with open('data/model.pkl', 'rb') as file:
         logger.info("Attempting to load model")
