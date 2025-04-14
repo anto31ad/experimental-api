@@ -44,6 +44,9 @@ def predict(
     features: Flower,
     token: Annotated[str, Depends(auth.oauth2_scheme)]
 ):
+    # param 'token' is not used in this function;
+    # However, it is needed for calling Depends, which in turn
+    # enforces authentication, so only authorized users can call this method
 
     with open('data/model.pkl', 'rb') as file:
         logger.info("Attempting to load model")
