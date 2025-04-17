@@ -42,11 +42,11 @@ async def read_current_user(
 @app.post("/predict")
 def predict(
     features: Flower,
-    token: Annotated[str, Depends(auth.oauth2_scheme)]
+    current_user: Annotated[str, Depends(auth.get_current_user)]
 ):
-    # param 'token' is not used in this function;
+    # param 'current_user' is not used in this function;
     # However, it is needed for calling Depends, which in turn
-    # enforces authentication, so only authorized users can call this method
+    # enforces authentication, so only verified users can call this method
 
     with open('data/model.pkl', 'rb') as file:
         logger.info("Attempting to load model")
