@@ -3,11 +3,18 @@ import logging
 
 from http import HTTPStatus
 from typing import Annotated
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Path
 from fastapi.security import OAuth2PasswordRequestForm
 
 import auth
-from schema import User, UserInDB, Flower, FAKE_USERS_DB
+from schema import (
+    User,
+    UserInDB,
+    Payload,
+    FAKE_USERS_DB,
+    FAKE_SERVICES_DB,
+    Service
+)
 
 app = FastAPI()
 logger = logging.getLogger("uvicorn")
@@ -39,39 +46,42 @@ async def read_current_user(
 ):
     return current_user
 
-@app.post("/predict")
-def predict(
-    features: Flower,
-    current_user: Annotated[str, Depends(auth.get_current_user)]
+@app.get("/services")
+async def list_available_services(
+    #current_user: Annotated[str, Depends(auth.get_current_user)]
+):
+    return {
+        "message": HTTPStatus.OK.phrase,
+        "status-code": HTTPStatus.OK,
+        "data": FAKE_SERVICES_DB,
+    }
+
+@app.post("/services/{service_id}")
+async def predict(
+    #current_user: Annotated[str, Depends(auth.get_current_user)],
+    service_id: Annotated[int, Path(title="The ID of the item to get", ge=0, le=1000)],
+    payload: Payload,
 ):
     # param 'current_user' is not used in this function;
     # However, it is needed for calling Depends, which in turn
     # enforces authentication, so only verified users can call this method
 
-    with open('data/model.pkl', 'rb') as file:
-        logger.info("Attempting to load model")
-        model = pickle.load(file)
+    try:
+        service_dict = FAKE_SERVICES_DB[service_id]
+    except KeyError:
+        return {
+            "status-code": HTTPStatus.NOT_FOUND,
+            "message": HTTPStatus.NOT_FOUND.phrase,
+            "details" : f"Service with id {service_id} not Found"
+        }
 
-    raw_prediction = model.predict(
-        [
-            [
-                features.sepal_length,
-                features.sepal_width,
-                features.petal_length,
-                features.petal_width,
-            ]
-        ]
-    )
-    prediction = int(raw_prediction[0])
+    service = Service(**service_dict)
+
+    # TODO use the selected model
 
     return {
         "message": HTTPStatus.OK.phrase,
         "status-code": HTTPStatus.OK,
-        "data": {
-            "features": {
-                "sepal_length": features.sepal_length,
-                "sepal_width": features.sepal_width,
-            },
-            "prediction_id": prediction,
-        },
+        "data": payload.data,
+        "service" : service,
     }
