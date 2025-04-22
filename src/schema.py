@@ -61,9 +61,6 @@ class User(BaseModel):
 class UserInDB(User):
     password: str
 
-class Payload(BaseModel):
-    data: dict
-
 class ServiceParameter(BaseModel):
     name: str
     expects: Literal['int', 'str', 'float', 'bool', 'dict', 'list']
@@ -73,7 +70,6 @@ class Service(BaseModel):
     name: str | None = None                             # name of the service
     parameters: list[ServiceParameter] | None = None    # description of the required fields
     outputs: str | None = None                          # description of the output
-    path_to_model: str | None = None
 
 class ServiceOutput(BaseModel):
     input_payload: dict = {}

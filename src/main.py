@@ -13,7 +13,6 @@ import auth
 from schema import (
     User,
     UserInDB,
-    Payload,
     FAKE_USERS_DB,
     FAKE_SERVICES_DB,
     Service
@@ -105,7 +104,7 @@ async def list_service_info(
 async def predict(
     current_user: Annotated[str, Depends(auth.get_current_user)],
     service_id: Annotated[int, Path(title="The ID of the item to get", ge=0, le=1000)],
-    payload: Payload,
+    payload: dict,
 ):
 
     service_dict = FAKE_SERVICES_DB.get(service_id)
@@ -117,7 +116,7 @@ async def predict(
         }
 
     service = Service(**service_dict)
-    output = serve(service, payload.data, logger)
+    output = serve(service, payload, logger)
 
     return {
         "message": HTTPStatus.OK.phrase,
