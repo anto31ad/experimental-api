@@ -72,7 +72,7 @@ class Service(BaseModel):
     id: int
     name: str | None = None                             # name of the service
     parameters: list[ServiceParameter] | None = None    # description of the required fields
-    outputs: str | None = None                           # description of the output
+    outputs: str | None = None                          # description of the output
     path_to_model: str | None = None
 
 class ServiceOutput(BaseModel):
