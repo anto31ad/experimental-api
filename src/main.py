@@ -1,21 +1,39 @@
-import pickle
+# NOTE: param 'current_user' is not used in several functions;
+#       However, it is needed for calling Depends, which in turn
+#       enforces authentication, so only verified users can call this method
+
 import logging
 
 from http import HTTPStatus
 from typing import Annotated
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Path
 from fastapi.security import OAuth2PasswordRequestForm
 
 import auth
-from schema import User, UserInDB, Flower, FAKE_USERS_DB
+from schema import (
+    User,
+    UserInDB,
+    FAKE_USERS_DB,
+    FAKE_SERVICES_DB,
+    Service
+)
+from services import serve
 
 app = FastAPI()
 logger = logging.getLogger("uvicorn")
 
+
+# ==============================================================
+# GENERAL
+# ==============================================================
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
 
+
+# ==============================================================
+# AUTHENTICATION
+# ==============================================================
 @app.post("/token")
 async def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
@@ -33,45 +51,75 @@ async def login(
 
     return {"access_token": user.username, "token_type": "bearer"}
 
+
+# ==============================================================
+# USERS
+# ==============================================================
 @app.get("/users/me")
 async def read_current_user(
     current_user: Annotated[User, Depends(auth.get_current_user)]
 ):
     return current_user
 
-@app.post("/predict")
-def predict(
-    features: Flower,
+
+# ==============================================================
+# SERVICES
+# ==============================================================
+
+@app.get("/services")
+async def list_available_services(
     current_user: Annotated[str, Depends(auth.get_current_user)]
 ):
-    # param 'current_user' is not used in this function;
-    # However, it is needed for calling Depends, which in turn
-    # enforces authentication, so only verified users can call this method
+    return {
+        "message": HTTPStatus.OK.phrase,
+        "status-code": HTTPStatus.OK,
+        "data": FAKE_SERVICES_DB,
+    }
 
-    with open('data/model.pkl', 'rb') as file:
-        logger.info("Attempting to load model")
-        model = pickle.load(file)
 
-    raw_prediction = model.predict(
-        [
-            [
-                features.sepal_length,
-                features.sepal_width,
-                features.petal_length,
-                features.petal_width,
-            ]
-        ]
-    )
-    prediction = int(raw_prediction[0])
+@app.get("/services/{service_id}")
+async def list_service_info(
+    current_user: Annotated[str, Depends(auth.get_current_user)],
+    service_id: Annotated[int, Path(title="The ID of the item to get", ge=0, le=1000)],
+):
+
+    service_dict = FAKE_SERVICES_DB.get(service_id)
+    if not service_dict:
+        return {
+            "status-code": HTTPStatus.NOT_FOUND,
+            "message": HTTPStatus.NOT_FOUND.phrase,
+            "details" : f"Service with id {service_id} not Found"
+        }
+    
+    service = Service(**service_dict)
 
     return {
         "message": HTTPStatus.OK.phrase,
         "status-code": HTTPStatus.OK,
-        "data": {
-            "features": {
-                "sepal_length": features.sepal_length,
-                "sepal_width": features.sepal_width,
-            },
-            "prediction_id": prediction,
-        },
+        "data": service,
+    }
+
+
+@app.post("/services/{service_id}")
+async def predict(
+    current_user: Annotated[str, Depends(auth.get_current_user)],
+    service_id: Annotated[int, Path(title="The ID of the item to get", ge=0, le=1000)],
+    payload: dict,
+):
+
+    service_dict = FAKE_SERVICES_DB.get(service_id)
+    if not service_dict:
+        return {
+            "status-code": HTTPStatus.NOT_FOUND,
+            "message": HTTPStatus.NOT_FOUND.phrase,
+            "details" : f"Service with id {service_id} not found"
+        }
+
+    service = Service(**service_dict)
+    output = serve(service, payload, logger)
+
+    return {
+        "message": HTTPStatus.OK.phrase,
+        "status-code": HTTPStatus.OK,
+        "data": output
     }
