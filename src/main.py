@@ -1,4 +1,7 @@
-import pickle
+# NOTE: param 'current_user' is not used in several functions;
+#       However, it is needed for calling Depends, which in turn
+#       enforces authentication, so only verified users can call this method
+
 import logging
 
 from http import HTTPStatus
@@ -15,14 +18,23 @@ from schema import (
     FAKE_SERVICES_DB,
     Service
 )
+from services import serve
 
 app = FastAPI()
 logger = logging.getLogger("uvicorn")
 
+
+# ==============================================================
+# GENERAL
+# ==============================================================
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
 
+
+# ==============================================================
+# AUTHENTICATION
+# ==============================================================
 @app.post("/token")
 async def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
@@ -40,15 +52,24 @@ async def login(
 
     return {"access_token": user.username, "token_type": "bearer"}
 
+
+# ==============================================================
+# USERS
+# ==============================================================
 @app.get("/users/me")
 async def read_current_user(
     current_user: Annotated[User, Depends(auth.get_current_user)]
 ):
     return current_user
 
+
+# ==============================================================
+# SERVICES
+# ==============================================================
+
 @app.get("/services")
 async def list_available_services(
-    #current_user: Annotated[str, Depends(auth.get_current_user)]
+    current_user: Annotated[str, Depends(auth.get_current_user)]
 ):
     return {
         "message": HTTPStatus.OK.phrase,
@@ -56,32 +77,50 @@ async def list_available_services(
         "data": FAKE_SERVICES_DB,
     }
 
-@app.post("/services/{service_id}")
-async def predict(
-    #current_user: Annotated[str, Depends(auth.get_current_user)],
-    service_id: Annotated[int, Path(title="The ID of the item to get", ge=0, le=1000)],
-    payload: Payload,
-):
-    # param 'current_user' is not used in this function;
-    # However, it is needed for calling Depends, which in turn
-    # enforces authentication, so only verified users can call this method
 
-    try:
-        service_dict = FAKE_SERVICES_DB[service_id]
-    except KeyError:
+@app.get("/services/{service_id}")
+async def list_service_info(
+    current_user: Annotated[str, Depends(auth.get_current_user)],
+    service_id: Annotated[int, Path(title="The ID of the item to get", ge=0, le=1000)],
+):
+
+    service_dict = FAKE_SERVICES_DB.get(service_id)
+    if not service_dict:
         return {
             "status-code": HTTPStatus.NOT_FOUND,
             "message": HTTPStatus.NOT_FOUND.phrase,
             "details" : f"Service with id {service_id} not Found"
         }
-
+    
     service = Service(**service_dict)
-
-    # TODO use the selected model
 
     return {
         "message": HTTPStatus.OK.phrase,
         "status-code": HTTPStatus.OK,
-        "data": payload.data,
-        "service" : service,
+        "data": service,
+    }
+
+
+@app.post("/services/{service_id}")
+async def predict(
+    current_user: Annotated[str, Depends(auth.get_current_user)],
+    service_id: Annotated[int, Path(title="The ID of the item to get", ge=0, le=1000)],
+    payload: Payload,
+):
+
+    service_dict = FAKE_SERVICES_DB.get(service_id)
+    if not service_dict:
+        return {
+            "status-code": HTTPStatus.NOT_FOUND,
+            "message": HTTPStatus.NOT_FOUND.phrase,
+            "details" : f"Service with id {service_id} not found"
+        }
+
+    service = Service(**service_dict)
+    output = serve(service, payload.data, logger)
+
+    return {
+        "message": HTTPStatus.OK.phrase,
+        "status-code": HTTPStatus.OK,
+        "data": output
     }
