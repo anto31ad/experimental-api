@@ -66,7 +66,10 @@ Where `dev` tells fastapi to run the script `main.py` in dev mode.
 Now:
 
 1. go to [localhost:8000/docs](http://localhost:8000/docs)
-2. authenticate using `admin` as username and `secret` as password (not necessary, if you want to see what happens in step 3 when you're not authenticated)
+2. authenticate (step not necessary if you want to see what happens in step 3 when you're not authenticated)
+  1. to open the login panel, tap on the *Authorize* button located to the upper right
+  2. just type `admin` as username and `secret` as password
+  3. tap on *Authorize* below
 3. choose any operation and follow the instructions to test it
 4. have fun!
 
