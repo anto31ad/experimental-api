@@ -12,10 +12,11 @@ The long term goal of the project is to create an API framework with the followi
 - anomaly detection in API traffic
 - ability to monitor status of the service
 
+---
 
-## How to install (debian-based distros)
+## Installation
 
-### setup virtual environment
+### a) setup virtual environment
 
 Open a terminal and change the current directory to the root directory of the project.
 
@@ -35,15 +36,15 @@ source .venv/bin/activate
 
 You should see something like
 
+```bash
+(.venv) user@computer:~/path/to/project-dir$
 ```
-(venv) user@computer:~/path/to/project-dir$
-```
 
-3. At this point it is time to install the dependencies!
+3. Now it's time to install the dependencies!
 
-### install project dependencies
+### b) install project dependencies
 
-Assuming you activated the virtual environment:
+Assuming you have activated the virtual environment already:
 
 1. open the terminal and change current directory to the root folder of the project
 2. run the following command:
@@ -52,7 +53,7 @@ Assuming you activated the virtual environment:
 pip install -r requirements.txt
 ```
 
-## Run
+## Usage
 
 Assuming you activated the virtual environment, to run the API service, execute
 
@@ -61,6 +62,15 @@ fastapi dev src/main.py
 ```
 
 Where `dev` tells fastapi to run the script `main.py` in dev mode.
+
+Now:
+
+1. go to [localhost:8000/docs](http://localhost:8000/docs)
+2. authenticate using `admin` as username and `secret` as password (not necessary, if you want to see what happens in step 3 when you're not authenticated)
+3. choose any operation and follow the instructions to test it
+4. have fun!
+
+---
 
 ## Licence
 
