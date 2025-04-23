@@ -34,7 +34,7 @@ async def root():
 # ==============================================================
 # AUTHENTICATION
 # ==============================================================
-@app.post("/token")
+@app.post("/token", tags=["Auth"])
 async def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
 ):
@@ -55,7 +55,7 @@ async def login(
 # ==============================================================
 # USERS
 # ==============================================================
-@app.get("/users/me")
+@app.get("/users/me", tags=["Users"])
 async def read_current_user(
     current_user: Annotated[User, Depends(auth.get_current_user)]
 ):
@@ -66,7 +66,7 @@ async def read_current_user(
 # SERVICES
 # ==============================================================
 
-@app.get("/services")
+@app.get("/services", tags=["Services"])
 async def list_available_services(
     current_user: Annotated[str, Depends(auth.get_current_user)]
 ):
@@ -77,7 +77,7 @@ async def list_available_services(
     }
 
 
-@app.get("/services/{service_id}")
+@app.get("/services/{service_id}", tags=["Services"])
 async def list_service_info(
     current_user: Annotated[str, Depends(auth.get_current_user)],
     service_id: Annotated[int, Path(title="The ID of the item to get", ge=0, le=1000)],
@@ -100,7 +100,7 @@ async def list_service_info(
     }
 
 
-@app.post("/services/{service_id}")
+@app.post("/services/{service_id}", tags=["Services"])
 async def predict(
     current_user: Annotated[str, Depends(auth.get_current_user)],
     service_id: Annotated[int, Path(title="The ID of the item to get", ge=0, le=1000)],
