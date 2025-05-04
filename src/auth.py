@@ -2,7 +2,7 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
-from schema import User, UserInDB, FAKE_USERS_DB
+from .schema import User, UserInDB, FAKE_USERS_DB
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
