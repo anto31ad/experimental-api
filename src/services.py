@@ -1,7 +1,7 @@
 import pickle
 from logging import Logger
 
-from schema import Service, ServiceOutput
+from .schema import Service, ServiceOutput
 
 
 def _serve_iris(input_payload: dict, logger: Logger) -> ServiceOutput:
@@ -36,7 +36,7 @@ def _serve_digits(input_payload: str, logger: Logger):
         logger.info("Attempting to load model")
         model = pickle.load(file)
 
-    data_str = input_payload['features']
+    data_str = input_payload['pixels']
     data_points = [float(x) for x in data_str.split(";")]
 
     try:
