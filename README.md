@@ -63,7 +63,14 @@ fastapi dev src/main.py
 
 Where `dev` tells fastapi to run the script `main.py` in dev mode.
 
-Now:
+Now you have two options:
+
+- (a) test the API using the built in tool (Swagger)
+- (b) test the API using the front-end
+
+Read the sections below for details.
+
+### a) Use the API through Swagger
 
 1. go to [localhost:8000/docs](http://localhost:8000/docs)
 2. authenticate (step not necessary if you want to see what happens in step 3 when you're not authenticated)
@@ -72,6 +79,18 @@ Now:
     3. tap on *Authorize* below
 3. choose any operation and follow the instructions to test it
 4. have fun!
+
+### b) Use the API through the frontend
+
+First, you need to setup the frontend;
+
+To do so, follow the instructions in the [frontend repo](https://github.com/anto31ad/experimental-api-fe);
+
+At that point:
+
+1. re-read the instruction in this document to make sure everything is setup correctly.
+2. To login, use `admin` as username and `secret` as password.
+3. Have fun with the web app!
 
 ---
 
