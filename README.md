@@ -88,8 +88,8 @@ To do so, follow the instructions in the [frontend repo](https://github.com/anto
 
 At that point:
 
-1. re-read the instruction in this document to make sure everything is setup correctly.
-2. To login, use `admin` as username and `secret` as password.
+1. re-read the instructions in this document to make sure everything is setup correctly.
+2. To log in, use `admin` as username and `secret` as password.
 3. Have fun with the web app!
 
 ---
