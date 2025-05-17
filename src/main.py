@@ -1,16 +1,23 @@
 # NOTE: param 'current_user' is not used in several functions;
 #       However, it is needed for calling Depends, which in turn
 #       enforces authentication, so only verified users can call this method
-
 import logging
 
 from http import HTTPStatus
 from typing import Annotated
-from fastapi import FastAPI, Depends, HTTPException, Path
+
+from starlette.config import Config
+from starlette.middleware.sessions import SessionMiddleware
+
+from authlib.integrations.starlette_client import OAuth
+
+from fastapi import FastAPI, Depends, HTTPException, Path, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 
 from .auth import (
+    integrate_github_auth,
     get_current_user,
     hash_password
 )
@@ -35,6 +42,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.add_middleware(
+    SessionMiddleware,
+    secret_key="!secret")  # Use a real secret key in production
+
+# Load auth env
+oauth = OAuth(Config('.env'))
+integrate_github_auth(oauth)
+
 
 # ==============================================================
 # GENERAL
@@ -63,6 +79,26 @@ async def login(
         raise HTTPException(status_code=400, detail="Incorrect username or password")
 
     return {"access_token": user.username, "token_type": "bearer"}
+
+
+@app.get('/login/github')
+async def login_with_github(request: Request):
+    print("Session at login", request.session)
+    redirect_uri = request.url_for('auth_callback')
+    return await oauth.github.authorize_redirect(request, redirect_uri)
+
+@app.get('/auth/github')
+async def auth_callback(request: Request):
+    print("Session at callback", request.session)
+    token = await oauth.github.authorize_access_token(request)
+    user = await oauth.github.get('user', token=token)
+    user_data = user.json()
+    return {"user": user_data}
+
+@app.get('/logout')
+async def logout(request: Request):
+    request.session.clear()
+    return RedirectResponse(url="/")
 
 
 # ==============================================================
