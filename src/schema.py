@@ -64,6 +64,9 @@ class User(BaseModel):
 class UserInDB(User):
     password: str
 
+class GitHubUser(User):
+    github_id: str
+
 class ServiceParameter(BaseModel):
     name: str
     description: str | None = None

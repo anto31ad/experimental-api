@@ -19,6 +19,7 @@ from fastapi.responses import RedirectResponse
 from .auth import (
     integrate_github_auth,
     get_current_user,
+    get_current_github_user,
     hash_password
 )
 from .schema import (
@@ -47,8 +48,11 @@ app.add_middleware(
     SessionMiddleware,
     secret_key="!secret")  # Use a real secret key in production
 
-# Load auth env
-oauth = OAuth(Config('.env'))
+# load environment variables
+config = Config('.env')
+
+# setup github oauth app
+oauth = OAuth(config)
 integrate_github_auth(oauth)
 
 
@@ -83,22 +87,28 @@ async def login(
 
 @app.get('/login/github')
 async def login_with_github(request: Request):
-    print("Session at login", request.session)
     redirect_uri = request.url_for('auth_callback')
     return await oauth.github.authorize_redirect(request, redirect_uri)
 
+
 @app.get('/auth/github')
 async def auth_callback(request: Request):
-    print("Session at callback", request.session)
     token = await oauth.github.authorize_access_token(request)
     user = await oauth.github.get('user', token=token)
     user_data = user.json()
-    return {"user": user_data}
+
+    # store user temporarily
+    request.session['user'] = {
+        "github_id": user_data["id"],
+        "username": user_data["login"],
+    }
+    return RedirectResponse(url="/docs")
+
 
 @app.get('/logout')
 async def logout(request: Request):
     request.session.clear()
-    return RedirectResponse(url="/")
+    return RedirectResponse(url="/docs")
 
 
 # ==============================================================
@@ -106,7 +116,7 @@ async def logout(request: Request):
 # ==============================================================
 @app.get("/users/me", tags=["Users"])
 async def read_current_user(
-    current_user: Annotated[User, Depends(get_current_user)]
+    current_user: Annotated[User, Depends(get_current_github_user)]
 ):
     return current_user
 
@@ -117,7 +127,7 @@ async def read_current_user(
 
 @app.get("/services", tags=["Services"])
 async def list_available_services(
-    current_user: Annotated[str, Depends(get_current_user)]
+    current_user: Annotated[str, Depends(get_current_github_user)]
 ):
     services_list = list(FAKE_SERVICES_DB.values())
 
@@ -130,7 +140,7 @@ async def list_available_services(
 
 @app.get("/services/{service_id}", tags=["Services"])
 async def list_service_info(
-    current_user: Annotated[str, Depends(get_current_user)],
+    current_user: Annotated[str, Depends(get_current_github_user)],
     service_id: Annotated[int, Path(title="The ID of the item to get", ge=0, le=1000)],
 ):
 
@@ -153,7 +163,7 @@ async def list_service_info(
 
 @app.post("/services/{service_id}", tags=["Services"])
 async def predict(
-    current_user: Annotated[str, Depends(get_current_user)],
+    current_user: Annotated[str, Depends(get_current_github_user)],
     service_id: Annotated[int, Path(title="The ID of the item to get", ge=0, le=1000)],
     payload: dict,
 ):

@@ -3,10 +3,10 @@ import os
 from typing import Annotated
 from authlib.integrations.starlette_client import OAuth
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
-from .schema import User, UserInDB, FAKE_USERS_DB
+from .schema import User, UserInDB, FAKE_USERS_DB, GitHubUser
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -44,3 +44,17 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> Use
             headers={"WWW-Authenticate": "Bearer"},
         )
     return user
+
+async def get_current_github_user(request: Request) -> GitHubUser:
+    user = request.session.get("user")
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials",
+        )
+    return GitHubUser(
+        # using a str cast to sanitize values;
+        # e.g. the github user id is a integer, but GitHubUser wants a str 
+        username=str(user["username"]),
+        github_id=str(user["github_id"]),
+    )
