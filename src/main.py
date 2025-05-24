@@ -1,6 +1,3 @@
-# NOTE: param 'current_user' is not used in several functions;
-#       However, it is needed for calling Depends, which in turn
-#       enforces authentication, so only verified users can call this method
 import logging
 
 from http import HTTPStatus
@@ -12,7 +9,6 @@ from starlette.middleware.sessions import SessionMiddleware
 from authlib.integrations.starlette_client import OAuth
 
 from fastapi import FastAPI, Depends, HTTPException, Path, Request
-from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
@@ -31,29 +27,36 @@ from .schema import (
 )
 from .services import serve
 
-app = FastAPI()
-logger = logging.getLogger("uvicorn")
-
-# Prevents CORS error when browsers receive a response from this 
-# "*" means "all"
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-app.add_middleware(
-    SessionMiddleware,
-    secret_key="!secret")  # Use a real secret key in production
-
 # load environment variables
 config = Config('.env')
+
+FRONTEND_ORIGIN: str = f"http://{config.get('FRONTEND_HOST')}:{config.get('FRONTEND_PORT')}"
 
 # setup github oauth app
 oauth = OAuth(config)
 integrate_github_auth(oauth)
+
+# setup FastAPI app
+app = FastAPI()
+logger = logging.getLogger("uvicorn")
+    # Prevents CORS error when browsers receive a response from this 
+    # "*" means "all"
+app.add_middleware(
+    CORSMiddleware,
+
+    # If allow_credentials is True, allow_origins cannot be ["*"], because
+    # when the browser makes a request with credentials (e.g. read-only cookie),
+    # this server would send a response with header "Access-Control-Allow-Origin: *"
+    # which is not allowed by the CORS specification.
+    allow_credentials=True,
+    allow_origins=[FRONTEND_ORIGIN],
+
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+app.add_middleware(
+    SessionMiddleware,
+    secret_key="!secret")  # TODO Use a real secret key in production
 
 
 # ==============================================================
@@ -67,49 +70,65 @@ async def root():
 # ==============================================================
 # AUTHENTICATION
 # ==============================================================
-@app.post("/token", tags=["Auth"])
-async def login(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
-):
-    user_dict = FAKE_USERS_DB.get(form_data.username)
 
-    if not user_dict:
-        raise HTTPException(status_code=400, detail="Incorrect username or password")
-    user = UserInDB(**user_dict)
+# @app.post("/token", tags=["Auth"])
+# async def login(
+#     form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
+# ):
+#     user_dict = FAKE_USERS_DB.get(form_data.username)
 
-    hashed_password = hash_password(form_data.password)
+#     if not user_dict:
+#         raise HTTPException(status_code=400, detail="Incorrect username or password")
+#     user = UserInDB(**user_dict)
 
-    if not hashed_password == user.password:
-        raise HTTPException(status_code=400, detail="Incorrect username or password")
+#     hashed_password = hash_password(form_data.password)
 
-    return {"access_token": user.username, "token_type": "bearer"}
+#     if not hashed_password == user.password:
+#         raise HTTPException(status_code=400, detail="Incorrect username or password")
+
+#     return {"access_token": user.username, "token_type": "bearer"}
 
 
-@app.get('/login/github')
+@app.get('/login/github', tags=["Auth"])
 async def login_with_github(request: Request):
-    redirect_uri = request.url_for('auth_callback')
-    return await oauth.github.authorize_redirect(request, redirect_uri)
+    try:
+        redirect_uri = request.url_for('auth_callback')
+        return await oauth.github.authorize_redirect(request, redirect_uri)
+    except Exception as exc:
+        logger.error(f"GitHub login error: {exc}")
+        raise HTTPException(status_code=401, detail='Login failed while reaching GitHub') 
 
 
-@app.get('/auth/github')
+@app.get('/auth/github', tags=["Auth"])
 async def auth_callback(request: Request):
-    token = await oauth.github.authorize_access_token(request)
-    user = await oauth.github.get('user', token=token)
-    user_data = user.json()
+    try:
+        token = await oauth.github.authorize_access_token(request)
+        github_response = await oauth.github.get('user', token=token)
+        github_user_data = github_response.json()
 
-    # store user temporarily
-    request.session['user'] = {
-        "github_id": user_data["id"],
-        "username": user_data["login"],
-    }
-    return RedirectResponse(url="/docs")
+        # store user temporarily
+        user_data = {
+            "github_id": github_user_data["id"],
+            "username": github_user_data["login"],
+        }
+        request.session['user'] = user_data
+        return RedirectResponse(url=FRONTEND_ORIGIN)
+    except Exception as exc:
+        logger.error(f"GitHub callback error: {exc}")
+        raise HTTPException(status_code=401, detail='GitHub denied authentication') 
 
 
-@app.get('/logout')
+@app.get('/logout', tags=["Auth"])
 async def logout(request: Request):
-    request.session.clear()
-    return RedirectResponse(url="/docs")
-
+    try:
+        request.session.clear()
+        response = RedirectResponse(url=FRONTEND_ORIGIN)
+        response.delete_cookie('session')
+        return response
+    except Exception as exc:
+        logger.error(f"logout error: {exc}")
+        raise HTTPException(status_code=400, detail='Something failed during logout') 
+       
 
 # ==============================================================
 # USERS
@@ -124,6 +143,10 @@ async def read_current_user(
 # ==============================================================
 # SERVICES
 # ==============================================================
+
+# NOTE: param 'current_user' may not used in the following path operations;
+#       However, it is needed for calling Depends, which in turn enforces authentication,
+#       this makes sure that only verified users can call this method
 
 @app.get("/services", tags=["Services"])
 async def list_available_services(
