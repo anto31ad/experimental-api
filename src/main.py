@@ -11,6 +11,7 @@ from authlib.integrations.starlette_client import OAuth
 from fastapi import FastAPI, Depends, HTTPException, Path, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 
 from .auth import (
     integrate_github_auth,
@@ -58,6 +59,8 @@ app.add_middleware(
     SessionMiddleware,
     secret_key="!secret")  # TODO Use a real secret key in production
 
+    # mount static files directory
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # ==============================================================
 # GENERAL
@@ -153,7 +156,9 @@ async def read_current_user(
 async def list_available_services(
     current_user: Annotated[str, Depends(get_current_github_user)]
 ):
-    services_list = list(FAKE_SERVICES_DB.values())
+    services_list = [
+        Service(**service_dict) for service_dict in FAKE_SERVICES_DB.values()
+    ]
 
     return {
         "message": HTTPStatus.OK.phrase,

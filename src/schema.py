@@ -39,7 +39,8 @@ FAKE_SERVICES_DB: dict = {
                 },
             ],
         "description": "predicts Iris subspecies from petal and sepal widths and lengths",
-        "path_to_model": 'data/iris_classifier.pkl'
+        "path_to_model": 'data/iris_classifier.pkl',
+        "thumbnail_url": '/static/iris-thumb.jpg'
     },
     2 : {
         "id": 2,
@@ -77,6 +78,7 @@ class Service(BaseModel):
     name: str | None = None                             # name of the service
     description: str | None = None                      # a brief description of the service
     parameters: list[ServiceParameter] | None = None    # description of the required fields
+    thumbnail_url: str | None = None                    # a decorative image
 
 class ServiceOutput(BaseModel):
     input_payload: dict = {}
