@@ -112,7 +112,8 @@ async def auth_callback(request: Request):
             "username": github_user_data["login"],
         }
         request.session['user'] = user_data
-        return RedirectResponse(url=FRONTEND_ORIGIN)
+        return RedirectResponse(
+            url=f"{FRONTEND_ORIGIN}/login/callback")
     except Exception as exc:
         logger.error(f"GitHub callback error: {exc}")
         raise HTTPException(status_code=401, detail='GitHub denied authentication') 
