@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
+from .utils import validate_url
 from .auth import (
     integrate_github_auth,
     get_current_user,
@@ -31,7 +32,13 @@ from .services import serve
 # load environment variables
 config = Config('.env')
 
-FRONTEND_ORIGIN: str = f"http://{config.get('FRONTEND_HOST')}:{config.get('FRONTEND_PORT')}"
+FRONTEND_PROCESS: str = f"http://{config.get('FRONTEND_HOST')}:{config.get('FRONTEND_PORT')}"
+
+THIS_HOST = config.get('THIS_HOST')
+THIS_PORT = config.get('THIS_PORT')
+THIS_PROCESS: str = f"http://{THIS_HOST}:{THIS_PORT}"
+
+ALLOW_ORIGINS = [FRONTEND_PROCESS, THIS_PROCESS]
 
 # setup github oauth app
 oauth = OAuth(config)
@@ -50,7 +57,7 @@ app.add_middleware(
     # this server would send a response with header "Access-Control-Allow-Origin: *"
     # which is not allowed by the CORS specification.
     allow_credentials=True,
-    allow_origins=[FRONTEND_ORIGIN],
+    allow_origins=ALLOW_ORIGINS,
 
     allow_methods=["*"],
     allow_headers=["*"],
@@ -93,8 +100,16 @@ async def root():
 
 
 @app.get('/login/github', tags=["Auth"])
-async def login_with_github(request: Request):
+async def login_with_github(request: Request, next_url: str="/docs"):
+    
+    print(next_url)
+    # try to parse the redirect url
+    if not validate_url(next_url, ALLOW_ORIGINS):
+        logger.error(f"Invalid next_url during login: {next_url}")
+        raise HTTPException(status_code=400, detail="Login failed because of invalid redirect URL")
+    
     try:
+        request.session['nextUrl'] = next_url
         redirect_uri = request.url_for('auth_callback')
         return await oauth.github.authorize_redirect(request, redirect_uri)
     except Exception as exc:
@@ -115,18 +130,25 @@ async def auth_callback(request: Request):
             "username": github_user_data["login"],
         }
         request.session['user'] = user_data
+
+        next_url = request.session.pop('nextUrl', '/docs')
         return RedirectResponse(
-            url=f"{FRONTEND_ORIGIN}/login/callback")
+            url=next_url)
     except Exception as exc:
         logger.error(f"GitHub callback error: {exc}")
         raise HTTPException(status_code=401, detail='GitHub denied authentication') 
 
-
 @app.get('/logout', tags=["Auth"])
-async def logout(request: Request):
+async def logout(request: Request, next_url: str = '/docs'):
+    
+    # try to parse the redirect url
+    if not validate_url(next_url, ALLOW_ORIGINS):
+        logger.error(f"Invalid next_url during logout: {next_url}")
+        raise HTTPException(status_code=400, detail="Logout failed because of invalid redirect URL")
+
     try:
         request.session.clear()
-        response = RedirectResponse(url=FRONTEND_ORIGIN)
+        response = RedirectResponse(url=next_url)
         response.delete_cookie('session')
         return response
     except Exception as exc:
