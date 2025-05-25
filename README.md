@@ -68,17 +68,18 @@ Now you have two options:
 - (a) test the API using the built in tool (Swagger)
 - (b) test the API using the front-end
 
+Since this app leverages GitHub for authentication, you need to create a GitHub Oauth App from [your account's settings](https://github.com/settings/developers). 
+
 Read the sections below for details.
 
 ### a) Use the API through Swagger
 
 1. go to [localhost:8000/docs](http://localhost:8000/docs)
-2. authenticate (step not necessary if you want to see what happens in step 3 when you're not authenticated)
-    1. to open the login panel, tap on the *Authorize* button located to the upper right
-    2. just type `admin` as username and `secret` as password
-    3. tap on *Authorize* below
+2. authenticate with GitHub by going to [localhost:8000/login/github](http://localhost:8000/login/github) and following the instructions
 3. choose any operation and follow the instructions to test it
 4. have fun!
+
+To logout, go to [localhost:8000/logout](http://localhost:8000/logout);
 
 ### b) Use the API through the frontend
 
@@ -89,10 +90,9 @@ To do so, follow the instructions in the [frontend repo](https://github.com/anto
 At that point:
 
 1. re-read the instructions in this document to make sure everything is setup correctly.
-2. To log in, use `admin` as username and `secret` as password.
+2. To log in, tap to the login button in the `/login` page
 3. Have fun with the web app!
 
----
 
 ## Licence
 
