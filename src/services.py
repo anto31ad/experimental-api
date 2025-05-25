@@ -30,7 +30,7 @@ def _serve_iris(input_payload: dict, logger: Logger) -> ServiceOutput:
     )
 
 
-def _serve_digits(input_payload: str, logger: Logger):
+def _serve_digits(input_payload: dict, logger: Logger):
 
     with open('data/digit_classifier.pkl', 'rb') as file:
         logger.info("Attempting to load model")
@@ -65,7 +65,11 @@ SERVICES_CALLABLES = {
 
 def serve(service: Service, args: dict, logger: Logger) -> ServiceOutput:
 
-    feature_names = [p.name for p in service.parameters]
+    feature_names = []
+
+    if service.parameters:
+        feature_names.extend(p.name for p in service.parameters)
+
     feat_dic = {key: args[key] for key in feature_names if key in args}
 
     return SERVICES_CALLABLES[service.id](
