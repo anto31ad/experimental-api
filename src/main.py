@@ -18,15 +18,10 @@ from fastapi.staticfiles import StaticFiles
 from .utils import validate_url
 from .auth import (
     integrate_github_auth,
-    get_current_user,
     get_current_github_user,
-    hash_password
 )
 from .schema import (
     User,
-    UserInDB,
-    FAKE_USERS_DB,
-    FAKE_SERVICES_DB,
     Service
 )
 from . import db
@@ -106,24 +101,6 @@ async def root():
 # ==============================================================
 # AUTHENTICATION
 # ==============================================================
-
-# @app.post("/token", tags=["Auth"])
-# async def login(
-#     form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
-# ):
-#     user_dict = FAKE_USERS_DB.get(form_data.username)
-
-#     if not user_dict:
-#         raise HTTPException(status_code=400, detail="Incorrect username or password")
-#     user = UserInDB(**user_dict)
-
-#     hashed_password = hash_password(form_data.password)
-
-#     if not hashed_password == user.password:
-#         raise HTTPException(status_code=400, detail="Incorrect username or password")
-
-#     return {"access_token": user.username, "token_type": "bearer"}
-
 
 @app.get('/login/github', tags=["Auth"])
 async def login_with_github(request: Request, next_url: str="/docs"):

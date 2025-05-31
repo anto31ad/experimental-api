@@ -1,26 +1,7 @@
 from pydantic import BaseModel
 
-FAKE_USERS_DB = {
-    "admin": {
-        "username": "admin",
-        "password": "fakehashed_secret",
-    },
-    "alice": {
-        "username": "alice",
-        "password": "fakehashed_secret2",
-    },
-}
-
-# NOTE: order of parameters matters!
-# imagine the model expecting parameters (A, B), both floats;
-# if the API sends values for (b, A) for (A, B), it will produce unexpected results
-FAKE_SERVICES_DB: dict = {}
-
 class User(BaseModel):
     username: str
-
-class UserInDB(User):
-    password: str
 
 class GitHubUser(User):
     github_id: str
@@ -30,6 +11,9 @@ class ServiceParameter(BaseModel):
     description: str | None = None
     data_type: str | None = None
 
+# NOTE: order of parameters matters!
+# imagine the model expecting parameters (A, B), both floats;
+# if the API sends values for (b, A) for (A, B), it will produce unexpected results
 class Service(BaseModel):
     name: str | None = None                             # name of the service
     description: str | None = None                      # a brief description of the service
