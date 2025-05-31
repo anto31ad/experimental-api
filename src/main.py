@@ -1,7 +1,9 @@
 import logging
 
+from contextlib import asynccontextmanager
 from http import HTTPStatus
 from typing import Annotated
+from pydantic import ValidationError
 
 from starlette.config import Config
 from starlette.middleware.sessions import SessionMiddleware
@@ -27,6 +29,7 @@ from .schema import (
     FAKE_SERVICES_DB,
     Service
 )
+from . import db
 from .services import serve
 
 # load environment variables
@@ -39,14 +42,37 @@ THIS_PORT = config.get('THIS_PORT')
 THIS_PROCESS: str = f"http://{THIS_HOST}:{THIS_PORT}"
 
 ALLOW_ORIGINS = [FRONTEND_PROCESS, THIS_PROCESS]
+SERVICES_DB: dict[str, Service] = {}
+
+logger = logging.getLogger("uvicorn")
+
+# setup lifespan
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Context manager to handle application lifespan events.
+
+    Used to load the database into memory.
+    """
+    global SERVICES_DB
+
+    logger.info("Loading database...")
+    SERVICES_DB = db.load_services(logger)
+
+    yield
+
+    logger.info("Saving database...")
+    db.save_services(logger, SERVICES_DB)
+
+
 
 # setup github oauth app
 oauth = OAuth(config)
 integrate_github_auth(oauth)
 
 # setup FastAPI app
-app = FastAPI()
-logger = logging.getLogger("uvicorn")
+app = FastAPI(
+    lifespan=lifespan
+)
     # Prevents CORS error when browsers receive a response from this 
     # "*" means "all"
 app.add_middleware(
@@ -178,9 +204,14 @@ async def read_current_user(
 async def list_available_services(
     current_user: Annotated[str, Depends(get_current_github_user)]
 ):
-    services_list = [
-        Service(**service_dict) for service_dict in FAKE_SERVICES_DB.values()
-    ]
+    services_list = []
+    for id, service in SERVICES_DB.items():
+        services_list.append({
+            'id': id,
+            'name': service.name,
+            'description': service.description,
+            'thumbnail_url': service.thumbnail_url
+        }) 
 
     return {
         "message": HTTPStatus.OK.phrase,
@@ -192,18 +223,16 @@ async def list_available_services(
 @app.get("/services/{service_id}", tags=["Services"])
 async def list_service_info(
     current_user: Annotated[str, Depends(get_current_github_user)],
-    service_id: Annotated[int, Path(title="The ID of the item to get", ge=0, le=1000)],
+    service_id: Annotated[str, Path(title="The ID of the item to get")],
 ):
 
-    service_dict = FAKE_SERVICES_DB.get(service_id)
-    if not service_dict:
+    service = SERVICES_DB.get(service_id)
+    if not service:
         return {
             "status-code": HTTPStatus.NOT_FOUND,
             "message": HTTPStatus.NOT_FOUND.phrase,
             "details" : f"Service with id {service_id} not Found"
         }
-    
-    service = Service(**service_dict)
 
     return {
         "message": HTTPStatus.OK.phrase,
@@ -212,26 +241,128 @@ async def list_service_info(
     }
 
 
-@app.post("/services/{service_id}", tags=["Services"])
-async def predict(
+@app.post("/services", tags=["Services"])
+async def create_service(
     current_user: Annotated[str, Depends(get_current_github_user)],
-    service_id: Annotated[int, Path(title="The ID of the item to get", ge=0, le=1000)],
+    payload: dict = {
+        'name': 'Untitled',
+        'parameters': [
+            {
+                'name': 'Untitled',
+                'description': '',
+                'data_type': '',
+            }
+        ],
+        'description': '',
+    }
+):
+    if not payload:
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail="Payload is required"
+        )
+
+    new_service = Service(**payload)
+    new_service_id = db.create_service(logger, SERVICES_DB, new_service)
+    if not new_service_id:
+        raise HTTPException(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            detail="Could not add service due to conflicting id."
+        )
+
+    response = new_service.model_dump()
+    response['id'] = new_service_id
+    return response
+
+@app.patch("/services/{service_id}", tags=["Services"])
+async def update_service(
+    current_user: Annotated[str, Depends(get_current_github_user)],
+    service_id: Annotated[str, Path(title="The ID of the item to get")],
     payload: dict,
 ):
-
-    service_dict = FAKE_SERVICES_DB.get(service_id)
-    if not service_dict:
+    service = SERVICES_DB.get(service_id)
+    if not service:
         return {
             "status-code": HTTPStatus.NOT_FOUND,
             "message": HTTPStatus.NOT_FOUND.phrase,
             "details" : f"Service with id {service_id} not found"
         }
+    
+    upd_service: Service
+    try:
+        upd_service = Service(**{**service.model_dump(), **payload})
+    except ValidationError:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST,
+            detail="Could not update service: check payload syntax."
+        )
 
-    service = Service(**service_dict)
-    output = serve(service, payload, logger)
+    SERVICES_DB[service_id] = upd_service
+    return {
+        "message": HTTPStatus.OK.phrase,
+        "status-code": HTTPStatus.OK,
+        "data": upd_service.model_dump() | {"id": service_id}
+    }
+
+
+@app.delete("/services/{service_id}", tags=["Services"])
+async def delete_service(
+    current_user: Annotated[str, Depends(get_current_github_user)],
+    service_id: Annotated[str, Path(title="The ID of the item to get")],
+):
+
+    removed = SERVICES_DB.pop(service_id, None)
+    if not removed:
+        return {
+            "status-code": HTTPStatus.NOT_FOUND,
+            "message": HTTPStatus.NOT_FOUND.phrase,
+            "details": f"Service with id {service_id} not found"
+        }
+
+    return {
+        "status-code": HTTPStatus.OK,
+        "message": HTTPStatus.OK.phrase,
+        "details": f"Service with id {service_id} deleted",
+        "deleted": removed.model_dump()
+    }
+
+@app.post("/services/{service_id}/use", tags=["Services"])
+async def predict(
+    current_user: Annotated[str, Depends(get_current_github_user)],
+    service_id: Annotated[str, Path(title="The ID of the item to get")],
+    payload: dict,
+):
+
+    service = SERVICES_DB.get(service_id)
+    if not service:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail=f"Service with id {service_id} not found"
+        )
+
+    try:
+        output = serve(service_id, payload, logger)
+    except Exception:
+        expected_params = [ param.model_dump() for param in service.parameters] 
+        raise HTTPException(
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail={
+                'service_id': service_id,
+                'input_data': payload,
+                'expected_params': expected_params
+            }
+        )
+
+    if not output:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail=f"Service with id {service_id} is unavailable for execution"
+        )
+
 
     return {
         "message": HTTPStatus.OK.phrase,
         "status-code": HTTPStatus.OK,
         "data": output
     }
+

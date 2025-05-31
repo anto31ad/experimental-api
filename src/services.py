@@ -10,15 +10,9 @@ def _serve_iris(input_payload: dict, logger: Logger) -> ServiceOutput:
         logger.info("Attempting to load model")
         model = pickle.load(file)
 
-    try:
-        raw_prediction = model.predict([
-            list(input_payload.values())
-        ])
-    except Exception as e:
-        return ServiceOutput(
-            input_payload=input_payload,
-            errors=[str(e)]
-        )
+    raw_prediction = model.predict([
+        list(input_payload.values())
+    ])
 
     prediction = int(raw_prediction[0])
 
@@ -39,15 +33,9 @@ def _serve_digits(input_payload: dict, logger: Logger):
     data_str = input_payload['pixels']
     data_points = [float(x) for x in data_str.split(";")]
 
-    try:
-        raw_prediction = model.predict([
-            data_points
-        ])
-    except Exception as e:
-        return ServiceOutput(
-            input_payload=input_payload,
-            errors=[str(e)]
-        )
+    raw_prediction = model.predict([
+        data_points
+    ])
 
     prediction = int(raw_prediction[0])
 
@@ -59,20 +47,17 @@ def _serve_digits(input_payload: dict, logger: Logger):
     )
 
 SERVICES_CALLABLES = {
-    1: _serve_iris,
-    2: _serve_digits
+    'iris': _serve_iris,
+    'digits': _serve_digits
 }
 
-def serve(service: Service, args: dict, logger: Logger) -> ServiceOutput:
+def serve(service_id: str, args: dict, logger: Logger) -> ServiceOutput | None:
 
-    feature_names = []
+    callable = SERVICES_CALLABLES.get(service_id)
+    if not callable:
+        return None
 
-    if service.parameters:
-        feature_names.extend(p.name for p in service.parameters)
-
-    feat_dic = {key: args[key] for key in feature_names if key in args}
-
-    return SERVICES_CALLABLES[service.id](
-        input_payload=feat_dic,
+    return callable(
+        input_payload=args,
         logger=logger
     )
