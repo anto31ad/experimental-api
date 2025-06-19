@@ -5,6 +5,7 @@ apt-clone==0.2.1
 apturl==0.5.2
 async-timeout==4.0.1
 attrs==21.2.0
+Authlib==1.6.0
 beautifulsoup4==4.10.0
 beniget==0.4.1
 blinker==1.4
@@ -49,6 +50,7 @@ ifaddr==0.1.7
 IMDbPY==2021.4.18
 importlib-metadata==4.6.4
 input-remapper==2.0.1
+itsdangerous==2.2.0
 jeepney==0.7.1
 Jinja2==3.1.6
 joblib==1.4.2
