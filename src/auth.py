@@ -1,6 +1,7 @@
 import os
 
 from authlib.integrations.starlette_client import OAuth
+from starlette.config import Config
 
 from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
@@ -9,11 +10,11 @@ from .schema import GitHubUser
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-def integrate_github_auth(oauth: OAuth):
+def integrate_github_auth(oauth: OAuth, config: Config):
     oauth.register(
         name='github',
-        client_id=os.getenv("GITHUB_CLIENT_ID"),
-        client_secret=os.getenv("GITHUB_CLIENT_SECRET"),
+        client_id=config.get("GITHUB_CLIENT_ID"),
+        client_secret=config.get("GITHUB_CLIENT_SECRET"),
         access_token_url='https://github.com/login/oauth/access_token',
         authorize_url='https://github.com/login/oauth/authorize',
         api_base_url='https://api.github.com/',

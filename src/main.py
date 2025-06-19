@@ -62,7 +62,7 @@ async def lifespan(app: FastAPI):
 
 # setup github oauth app
 oauth = OAuth(config)
-integrate_github_auth(oauth)
+integrate_github_auth(oauth, config)
 
 # setup FastAPI app
 app = FastAPI(
@@ -104,8 +104,7 @@ async def root():
 
 @app.get('/login/github', tags=["Auth"])
 async def login_with_github(request: Request, next_url: str="/docs"):
-    
-    print(next_url)
+
     # try to parse the redirect url
     if not validate_url(next_url, ALLOW_ORIGINS):
         logger.error(f"Invalid next_url during login: {next_url}")
