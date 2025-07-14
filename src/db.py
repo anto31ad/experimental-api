@@ -5,6 +5,7 @@ import string
 
 from logging import Logger
 
+from . import paths
 from .schema import Service
 
 RANDOM_STRING_CHARS = string.ascii_letters + string.digits
@@ -27,11 +28,11 @@ def save_services(logger: Logger, services: dict[str, Service]):
 def load_services(logger: Logger) -> dict[str, Service]:
 
     # if there is no services file, return empty dict 
-    if not os.path.exists('data/services.json'):
+    if not os.path.exists(paths.SERVICES_DB_FILEPATH.resolve()):
         return {}
     # otherwise, try to read its contents
     try:
-        with open('data/services.json', "r") as file:
+        with open(paths.SERVICES_DB_FILEPATH.resolve(), "r") as file:
             data = json.load(file)
             return {k: Service.model_validate(v) for k, v in data.items()}
     except Exception as e:
