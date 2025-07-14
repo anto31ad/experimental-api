@@ -1,9 +1,11 @@
-import pickle
+import http
+import http.client
 import requests
 from logging import Logger
 from urllib.parse import urlparse
 
 from . import config
+from . import utils
 from .schema import Service, ServiceOutput
 
 def serve(service: Service, input_payload: dict, logger: Logger) -> ServiceOutput:
@@ -26,11 +28,22 @@ def serve(service: Service, input_payload: dict, logger: Logger) -> ServiceOutpu
             ]
         )
     
-    # TODO samehost does not accound for aliases (e.g. localhost, 127.0.0.1, ...)
-    same_host = parsed_url.hostname == config.THIS_HOST 
-    same_port = parsed_url.port == int(config.THIS_PORT)
-    logger.info(f"{same_host} {same_port}")
-    if same_host and same_port:
+    url_hostname = parsed_url.hostname if parsed_url.hostname else ''
+    if parsed_url.port:
+        url_port = parsed_url.port
+    elif parsed_url.scheme == "http":
+        url_port = http.client.HTTP_PORT
+    elif parsed_url.scheme == "https":
+        url_port = http.client.HTTPS_PORT
+    else:
+        url_port = 0
+
+    if utils.is_same_process(
+        hostname_a  = url_hostname,
+        port_a      = url_port,
+        hostname_b  = config.THIS_HOST,
+        port_b      = config.THIS_PORT
+    ):
         logger.error("Requesting path operation on this server")
         return ServiceOutput(
             errors=[

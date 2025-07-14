@@ -1,3 +1,4 @@
+import socket
 from urllib.parse import urlparse
 
 def validate_url(url: str, allowed_origins: list[str]) -> bool:
@@ -13,3 +14,18 @@ def validate_url(url: str, allowed_origins: list[str]) -> bool:
         return True
     
     return False
+
+def is_same_process(
+    hostname_a: str = '',
+    port_a: int = 0,
+    hostname_b: str = '',
+    port_b: int = 0
+) -> bool:
+
+    addr_a = socket.gethostbyname(hostname_a) 
+    addr_b = socket.gethostbyname(hostname_b) 
+
+    same_host = addr_a == addr_b 
+    same_port = int(port_a) == int(port_b)
+
+    return same_host and same_port
