@@ -13,13 +13,13 @@ RANDOM_STRING_CHARS = string.ascii_letters + string.digits
 def save_services(logger: Logger, services: dict[str, Service]):
     try:
         # create directory if doesn't exist already
-        os.makedirs(paths.DB_DIR, exist_ok=True)
+        os.makedirs(paths.DB_DIR.resolve(), exist_ok=True)
     except Exception as e:
         logger.error("error while creating directory", e)
 
     try:
         # save the services dictionary to file
-        with open(paths.SERVICES_DB_FILEPATH, "w") as file:
+        with open(paths.SERVICES_DB_FILEPATH.resolve(), "w") as file:
             json.dump({k: v.model_dump() for k, v in services.items()}, file)
     except Exception as e:
         logger.error("error while writing database", e)
