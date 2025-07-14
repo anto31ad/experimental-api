@@ -24,7 +24,7 @@ model.fit(X_train, y_train)
 # Predict on test set
 y_pred = model.predict(X_test)
 
-with open('data/digit_classifier.pkl', 'wb') as file:
+with open('static/models/digit_classifier.pkl', 'wb') as file:
     pickle.dump(model, file)
 
 # Evaluate the model

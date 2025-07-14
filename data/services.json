@@ -1,1 +1,43 @@
-{"iris": {"name": "Iris Subspecies Classifier", "description": "predicts Iris subspecies from petal and sepal widths and lengths", "parameters": [{"name": "petal_length", "description": null, "data_type": "float"}, {"name": "petal_width", "description": null, "data_type": "float"}, {"name": "sepal_length", "description": null, "data_type": "float"}, {"name": "sepal_width", "description": null, "data_type": "float"}], "thumbnail_url": "static/iris-thumb.jpg", "executable_url": null}, "digits": {"name": "8x8 Handwritten Digits Recognizer", "description": "Predicts a digit (0-9) from handwritten representation on a canvas of 8x8 pixels", "parameters": [{"name": "pixels", "description": "An array of 64 values, each representing a pixel's opacity.", "data_type": "str"}], "thumbnail_url": null, "executable_url": null}, "uyRQQE": {"name": "Untitled", "description": "", "parameters": [{"name": "Untitled", "description": "", "data_type": ""}], "thumbnail_url": null, "executable_url": null}}
+{
+    "digits": {
+        "description": "Predicts a digit (0-9) from handwritten representation on a canvas of 8x8 pixels",
+        "name": "8x8 Handwritten Digits Recognizer",
+        "parameters": [
+            {
+                "data_type": "str",
+                "description": "An array of 64 values, each representing a pixel's opacity.",
+                "name": "pixels"
+            }
+        ],
+        "thumbnail_url": null,
+        "executable_url": "/static/models/digit_classifier.pkl"
+    },
+    "iris": {
+        "description": "predicts Iris subspecies from petal and sepal widths and lengths",
+        "name": "Iris Subspecies Classifier",
+        "parameters": [
+            {
+                "data_type": "float",
+                "description": null,
+                "name": "petal_length"
+            },
+            {
+                "data_type": "float",
+                "description": null,
+                "name": "petal_width"
+            },
+            {
+                "data_type": "float",
+                "description": null,
+                "name": "sepal_length"
+            },
+            {
+                "data_type": "float",
+                "description": null,
+                "name": "sepal_width"
+            }
+        ],
+        "thumbnail_url": "/static/iris-thumb.jpg",
+        "executable_url": "/static/models/iris_classifier.pkl"
+    }
+}
