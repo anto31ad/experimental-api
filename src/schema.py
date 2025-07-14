@@ -9,7 +9,6 @@ class GitHubUser(User):
 class ServiceParameter(BaseModel):
     name: str
     description: str | None = None
-    data_type: str | None = None
 
 # NOTE: order of parameters matters!
 # imagine the model expecting parameters (A, B), both floats;
@@ -24,3 +23,4 @@ class Service(BaseModel):
 class ServiceOutput(BaseModel):
     input_payload: dict = {}
     output: dict = {}
+    errors: list = []

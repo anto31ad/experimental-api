@@ -5,7 +5,6 @@ from http import HTTPStatus
 from typing import Annotated
 from pydantic import ValidationError
 
-from starlette.config import Config
 from starlette.middleware.sessions import SessionMiddleware
 
 from authlib.integrations.starlette_client import OAuth
@@ -24,19 +23,13 @@ from .schema import (
     User,
     Service
 )
+
+from . import config
 from . import db
+from . import demo
 from .services import serve
 
-# load environment variables
-config = Config('.env')
 
-FRONTEND_PROCESS: str = f"http://{config.get('FRONTEND_HOST')}:{config.get('FRONTEND_PORT')}"
-
-THIS_HOST = config.get('THIS_HOST')
-THIS_PORT = config.get('THIS_PORT')
-THIS_PROCESS: str = f"http://{THIS_HOST}:{THIS_PORT}"
-
-ALLOW_ORIGINS = [FRONTEND_PROCESS, THIS_PROCESS]
 SERVICES_DB: dict[str, Service] = {}
 
 logger = logging.getLogger("uvicorn")
@@ -61,8 +54,8 @@ async def lifespan(app: FastAPI):
 
 
 # setup github oauth app
-oauth = OAuth(config)
-integrate_github_auth(oauth, config)
+oauth = OAuth(config.configDict)
+integrate_github_auth(oauth, config.configDict)
 
 # setup FastAPI app
 app = FastAPI(
@@ -78,7 +71,7 @@ app.add_middleware(
     # this server would send a response with header "Access-Control-Allow-Origin: *"
     # which is not allowed by the CORS specification.
     allow_credentials=True,
-    allow_origins=ALLOW_ORIGINS,
+    allow_origins=config.ALLOW_ORIGINS,
 
     allow_methods=["*"],
     allow_headers=["*"],
@@ -106,7 +99,7 @@ async def root():
 async def login_with_github(request: Request, next_url: str="/docs"):
 
     # try to parse the redirect url
-    if not validate_url(next_url, ALLOW_ORIGINS):
+    if not validate_url(next_url, config.ALLOW_ORIGINS):
         logger.error(f"Invalid next_url during login: {next_url}")
         raise HTTPException(status_code=400, detail="Login failed because of invalid redirect URL")
     
@@ -144,7 +137,7 @@ async def auth_callback(request: Request):
 async def logout(request: Request, next_url: str = '/docs'):
     
     # try to parse the redirect url
-    if not validate_url(next_url, ALLOW_ORIGINS):
+    if not validate_url(next_url, config.ALLOW_ORIGINS):
         logger.error(f"Invalid next_url during logout: {next_url}")
         raise HTTPException(status_code=400, detail="Logout failed because of invalid redirect URL")
 
@@ -303,7 +296,7 @@ async def delete_service(
     }
 
 @app.post("/services/{service_id}/use", tags=["Services"])
-async def predict(
+async def use_service(
     current_user: Annotated[str, Depends(get_current_github_user)],
     service_id: Annotated[str, Path(title="The ID of the item to get")],
     payload: dict,
@@ -316,29 +309,71 @@ async def predict(
             detail=f"Service with id {service_id} not found"
         )
 
+
+    output = serve(service, payload, logger)
+
+    if len(output.errors) == 0:
+        return {
+            "message": HTTPStatus.OK.phrase,
+            "status-code": HTTPStatus.OK,
+            "data": output
+        }
+
+    # if there are errors...
+    expected_params = [ param.model_dump() for param in service.parameters] 
+    raise HTTPException(
+        status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+        detail={
+            'service_id': service_id,
+            'errors': output.errors,
+            'input_data': payload,
+            'expected_params': expected_params
+        }
+    )
+
+
+
+@app.post("/demo/models/iris", tags=["Demo"])
+async def use_iris(
+    payload: demo.IrisPayload = demo.IrisPayload(
+        petal_length=0,
+        petal_width=0,
+        sepal_length=0,
+        sepal_width=0
+    )
+):
     try:
-        output = serve(service_id, payload, logger)
-    except Exception:
-        expected_params = [ param.model_dump() for param in service.parameters] 
+        return {
+            "message": HTTPStatus.OK.phrase,
+            "status-code": HTTPStatus.OK,
+            "data": demo.serve_iris(payload, logger)
+        }
+
+    except Exception as e:
         raise HTTPException(
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-            detail={
-                'service_id': service_id,
-                'input_data': payload,
-                'expected_params': expected_params
-            }
+            detail=str(e)
         )
+    
 
-    if not output:
+@app.post("/demo/models/digits", tags=["Demo"])
+async def use_digits(
+    payload: demo.DigitsPayload = demo.DigitsPayload(
+        pixels="0.0;0.0;10.0;16.0;16.0;11.0;0.0;0.0;0.0;1.0;11.0;"
+                "7.0;6.0;16.0;3.0;0.0;0.0;0.0;0.0;0.0;10.0;15.0;0.0;0.0;"
+                "0.0;0.0;0.0;0.0;15.0;7.0;0.0;0.0;0.0;0.0;0.0;0.0;15.0;"
+                "9.0;0.0;0.0;0.0;0.0;0.0;0.0;7.0;13.0;0.0;0.0;0.0;0.0;"
+                "5.0;4.0;10.0;16.0;0.0;0.0;0.0;0.0;10.0;16.0;16.0;10.0;0.0;0.0"
+    )
+):
+    try:
+        return {
+            "message": HTTPStatus.OK.phrase,
+            "status-code": HTTPStatus.OK,
+            "data": demo.serve_digits(payload, logger)
+        }
+    except Exception as e:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND,
-            detail=f"Service with id {service_id} is unavailable for execution"
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail=str(e)
         )
-
-
-    return {
-        "message": HTTPStatus.OK.phrase,
-        "status-code": HTTPStatus.OK,
-        "data": output
-    }
-

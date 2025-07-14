@@ -25,5 +25,5 @@ sample_json = {
 }
 
 # Print it as JSON string
-with open('static/models/digit_data.json', "w") as file:
+with open('data/models/digit_data.json', "w") as file:
     file.write(json.dumps(sample_json, indent=2))
