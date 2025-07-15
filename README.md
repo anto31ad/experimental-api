@@ -1,16 +1,8 @@
 # Experimental API 
 
-## Purpose and goals
-
 This is the graduation project for my Bachelor degree.
 
-The long term goal of the project is to create an API framework with the following features:
-
-- ease in plugging ML systems
-- ability to serve ML systems over the web
-- secure communication between the system and the user 
-- anomaly detection in API traffic
-- ability to monitor status of the service
+The goal of the project is to create a system that makes it easy to manage and test multiple AI models served through the Internet.
 
 ---
 
