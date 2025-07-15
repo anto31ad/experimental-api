@@ -97,8 +97,8 @@ python run_api.py
 
 Now you have two options:
 
-- (a) use the API using the built-in tool (Swagger)
-- (b) use the API using the front-end
+- (a) use the API through the built-in tool (Swagger)
+- (b) use the API through the front-end
 
 Since this app leverages GitHub for authentication, you need to create a GitHub Oauth App from [your account's settings](https://github.com/settings/developers). 
 
