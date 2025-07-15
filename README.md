@@ -57,13 +57,25 @@ pip install -r requirements.txt
 
 There are two steps to follow:
 
-1. run the *demo-services* application
-2. run the *api* application
+1. configuration
+2. run the *demo-services* application
+3. run the *api* application
 
-### 1. run demo-services
+### Configuration
 
-This application serves two models: iris and digits.
+This system leverages GitHub for authentication; thus you need to create a GitHub Oauth App from [your account's settings](https://github.com/settings/developers). 
 
+During the process, you will be assigned a *client ID* and a *secret key*; this data needs to be stored in a file called `.env`, placed in the project directory.
+
+Assuming you have just cloned the repository, you have to manually create this file; use `.env.sample` for reference. 
+
+Start by filling in `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` accordingly.
+
+The other commented lines may be useful later, but they can be ignored for now, since the system will use defaults.
+
+### Demo-services
+
+The demo-services application serves two models (iris and digits) to simulate a real process available through the Web.
 
 To run this application:
 
@@ -78,7 +90,7 @@ python run_demo_services.py
 
 > To stop the process, use `CTRL+C`, any key combination specific to your OS.
 
-### 2. run the api application
+### Api application
 
 This application is the core component of experimental-api.
 
@@ -100,11 +112,9 @@ Now you have two options:
 - (a) use the API through the built-in tool (Swagger)
 - (b) use the API through the front-end
 
-Since this app leverages GitHub for authentication, you need to create a GitHub Oauth App from [your account's settings](https://github.com/settings/developers). 
-
 Read the sections below for details.
 
-#### a) Use the API through Swagger
+#### 1. Use the API through Swagger
 
 1. go to [localhost:8000/docs](http://localhost:8000/docs)
 2. authenticate with GitHub by going to [localhost:8000/login/github](http://localhost:8000/login/github) and following the instructions
@@ -113,7 +123,7 @@ Read the sections below for details.
 
 To logout, go to [localhost:8000/logout](http://localhost:8000/logout);
 
-#### b) Use the API through the frontend
+#### 2. Use the API through the frontend
 
 First, you need to setup the frontend application;
 
