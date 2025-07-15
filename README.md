@@ -129,8 +129,3 @@ At that point:
 ## Licence
 
 This project is currently licenced under the [MIT Licence](./LICENCE.txt).
-
-This choice is temporary: it may change or be confirmed at some point;
-The *when* and the *if* depends on whether the project gets serious.
-
-Anyhow, all commits before the final decision will obviously stay under the MIT Licence.
