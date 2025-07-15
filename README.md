@@ -55,24 +55,56 @@ pip install -r requirements.txt
 
 ## Usage
 
-Assuming you activated the virtual environment, to run the API service, execute
+There are two steps to follow:
+
+1. run the *demo-services* application
+2. run the *api* application
+
+### 1. run demo-services
+
+This application serves two models: iris and digits.
+
+
+To run this application:
+
+1. Open a terminal
+2. Navigate to the project directory
+3. enter the venv
+4. run the following command
 
 ```python
-fastapi dev src/main.py
+python run_demo_services.py
 ```
 
-Where `dev` tells fastapi to run the script `main.py` in dev mode.
+> To stop the process, use `CTRL+C`, any key combination specific to your OS.
+
+### 2. run the api application
+
+This application is the core component of experimental-api.
+
+To run it:
+
+1. Open a terminal
+2. Navigate to the project directory
+3. enter the venv
+4. run the following command
+
+```python
+python run_api.py
+```
+
+> To stop the process, use `CTRL+C`, any key combination specific to your OS.
 
 Now you have two options:
 
-- (a) test the API using the built in tool (Swagger)
-- (b) test the API using the front-end
+- (a) use the API using the built-in tool (Swagger)
+- (b) use the API using the front-end
 
 Since this app leverages GitHub for authentication, you need to create a GitHub Oauth App from [your account's settings](https://github.com/settings/developers). 
 
 Read the sections below for details.
 
-### a) Use the API through Swagger
+#### a) Use the API through Swagger
 
 1. go to [localhost:8000/docs](http://localhost:8000/docs)
 2. authenticate with GitHub by going to [localhost:8000/login/github](http://localhost:8000/login/github) and following the instructions
@@ -81,9 +113,9 @@ Read the sections below for details.
 
 To logout, go to [localhost:8000/logout](http://localhost:8000/logout);
 
-### b) Use the API through the frontend
+#### b) Use the API through the frontend
 
-First, you need to setup the frontend;
+First, you need to setup the frontend application;
 
 To do so, follow the instructions in the [frontend repo](https://github.com/anto31ad/experimental-api-fe);
 

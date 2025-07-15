@@ -3,6 +3,8 @@ from sklearn.datasets import load_digits
 import json
 import matplotlib.pyplot as plt
 
+from src.demo import paths
+
 # Load the dataset
 digits = load_digits()
 X, y = digits.data, digits.target
@@ -25,5 +27,5 @@ sample_json = {
 }
 
 # Print it as JSON string
-with open('data/models/digit_data.json', "w") as file:
+with open(paths.DIGITS_EXAMPLE_FILEPATH, "w") as file:
     file.write(json.dumps(sample_json, indent=2))

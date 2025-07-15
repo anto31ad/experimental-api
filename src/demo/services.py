@@ -1,16 +1,8 @@
 import pickle
 from logging import Logger
-from pydantic import BaseModel
 from sklearn.datasets import load_iris
 
-class IrisPayload(BaseModel):
-    petal_length: float
-    petal_width: float
-    sepal_length: float
-    sepal_width: float
-
-class DigitsPayload(BaseModel):
-    pixels: str
+from .schema import IrisPayload, DigitsPayload
 
 
 def serve_iris(input_payload: IrisPayload, logger: Logger) -> int:

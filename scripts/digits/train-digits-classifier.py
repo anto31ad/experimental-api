@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pickle
 
+from src.demo import paths
+
 # Load the digits dataset
 digits = load_digits()
 X, y = digits.data, digits.target
@@ -24,7 +26,7 @@ model.fit(X_train, y_train)
 # Predict on test set
 y_pred = model.predict(X_test)
 
-with open('data/models/digit_classifier.pkl', 'wb') as file:
+with open(paths.DIGITS_MODEL_FILEPATH, 'wb') as file:
     pickle.dump(model, file)
 
 # Evaluate the model

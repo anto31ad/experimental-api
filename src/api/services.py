@@ -4,7 +4,7 @@ import requests
 from logging import Logger
 from urllib.parse import urlparse
 
-from . import config
+from .. import config
 from . import utils
 from .schema import Service, ServiceOutput
 

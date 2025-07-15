@@ -24,9 +24,8 @@ from .schema import (
     Service
 )
 
-from . import config
+from .. import config
 from . import db
-from . import demo
 from .services import serve
 
 
@@ -59,7 +58,8 @@ integrate_github_auth(oauth, config.configDict)
 
 # setup FastAPI app
 app = FastAPI(
-    lifespan=lifespan
+    lifespan=lifespan,
+    title='Experimental API'
 )
     # Prevents CORS error when browsers receive a response from this 
     # "*" means "all"
@@ -330,50 +330,3 @@ async def use_service(
             'expected_params': expected_params
         }
     )
-
-
-
-@app.post("/demo/models/iris", tags=["Demo"])
-async def use_iris(
-    payload: demo.IrisPayload = demo.IrisPayload(
-        petal_length=0,
-        petal_width=0,
-        sepal_length=0,
-        sepal_width=0
-    )
-):
-    try:
-        return {
-            "message": HTTPStatus.OK.phrase,
-            "status-code": HTTPStatus.OK,
-            "data": demo.serve_iris(payload, logger)
-        }
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-            detail=str(e)
-        )
-    
-
-@app.post("/demo/models/digits", tags=["Demo"])
-async def use_digits(
-    payload: demo.DigitsPayload = demo.DigitsPayload(
-        pixels="0.0;0.0;10.0;16.0;16.0;11.0;0.0;0.0;0.0;1.0;11.0;"
-                "7.0;6.0;16.0;3.0;0.0;0.0;0.0;0.0;0.0;10.0;15.0;0.0;0.0;"
-                "0.0;0.0;0.0;0.0;15.0;7.0;0.0;0.0;0.0;0.0;0.0;0.0;15.0;"
-                "9.0;0.0;0.0;0.0;0.0;0.0;0.0;7.0;13.0;0.0;0.0;0.0;0.0;"
-                "5.0;4.0;10.0;16.0;0.0;0.0;0.0;0.0;10.0;16.0;16.0;10.0;0.0;0.0"
-    )
-):
-    try:
-        return {
-            "message": HTTPStatus.OK.phrase,
-            "status-code": HTTPStatus.OK,
-            "data": demo.serve_digits(payload, logger)
-        }
-    except Exception as e:
-        raise HTTPException(
-            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-            detail=str(e)
-        )
