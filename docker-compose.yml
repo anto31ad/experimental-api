@@ -1,0 +1,81 @@
+services:
+  consul-server:
+    image: docker.io/hashicorp/consul:latest
+    container_name: consul-server
+    # Command to run Consul in development mode with UI and accessible client interface
+    command: agent -dev -client=0.0.0.0 -bind=0.0.0.0 -ui
+    ports:
+      - "8500:8500" # HTTP API and UI
+      - "8600:8600/udp" # DNS interface (UDP)
+    volumes:
+      # Optional: Persist Consul's data if you stop/start the container.
+      # Remove this line and the 'volumes:' section at the bottom if you don't need persistence for development.
+      - consul_data:/consul/data
+    healthcheck:
+      test: ["CMD", "consul", "members"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    networks:
+      - eapi-net
+
+  demo-services-server:
+    build:
+      context: demo-services
+      dockerfile: demo_services.dockerfile
+    ports:
+      - "9000:9000"
+    environment:
+      SERVICE_NAME: "demo-services"
+      SERVICE_HOST: "demo-services-server"
+      SERVICE_PORT: 9000
+      CONSUL_HOST: "consul-server"
+      CONSUL_PORT: 8500
+    networks:
+      - eapi-net
+    depends_on:
+      - consul-server
+
+  iris-server:
+    build:
+      context: iris-server
+      dockerfile: iris.dockerfile
+    ports:
+      - "9001:9001"
+    environment:
+      SERVICE_NAME: "iris"
+      SERVICE_HOST: "iris-server"
+      SERVICE_PORT: 9001
+      CONSUL_HOST: "consul-server"
+      CONSUL_PORT: 8500
+    networks:
+      - eapi-net
+    depends_on:
+      - consul-server
+
+  nginx-gateway:
+    build:
+      context: nginx
+      dockerfile: nginx.dockerfile
+    container_name: nginx-gateway
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf.ctmpl:/etc/consul-template/templates/nginx.conf.ctmpl
+    environment:
+      # Tell Consul-Template where to find Consul
+      CONSUL_HOST: consul-server
+      CONSUL_PORT: 8500
+    depends_on:
+      consul-server:
+        condition: service_healthy
+    networks:
+      - eapi-net
+
+volumes:
+  consul_data:
+    driver: local
+
+networks:
+  eapi-net:
+    driver: bridge

@@ -3,7 +3,7 @@ from sklearn.datasets import load_digits
 import json
 import matplotlib.pyplot as plt
 
-from src.demo import paths
+from . import paths
 
 # Load the dataset
 digits = load_digits()
