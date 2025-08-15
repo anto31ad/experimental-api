@@ -7,7 +7,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.datasets import load_iris
 
-DATA_DIR = Path('data/')
+from src.demo import paths
 
 # Load the Iris dataset
 iris = load_iris()
@@ -23,8 +23,7 @@ model = DecisionTreeClassifier(random_state=42)
 # Train the model
 model.fit(X_train, y_train)
 
-filepath = DATA_DIR / "model.pkl"
-with open(filepath, 'wb') as file:
+with open(paths.IRIS_MODEL_FILEPATH, 'wb') as file:
     pickle.dump(model, file)
 
 # Predict using the test data
