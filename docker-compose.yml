@@ -10,7 +10,7 @@ services:
     volumes:
       # Optional: Persist Consul's data if you stop/start the container.
       # Remove this line and the 'volumes:' section at the bottom if you don't need persistence for development.
-      - consul_data:/consul/data
+      - ./consul_data:/consul/data
     healthcheck:
       test: ["CMD", "consul", "members"]
       interval: 30s
@@ -53,24 +53,57 @@ services:
     depends_on:
       - consul-server
 
-  nginx-gateway:
-    build:
-      context: nginx
-      dockerfile: nginx.dockerfile
-    container_name: nginx-gateway
+  # nginx-gateway:
+  #   build:
+  #     context: nginx
+  #     dockerfile: nginx.dockerfile
+  #   container_name: nginx-gateway
+  #   ports:
+  #     - "80:80"
+  #   volumes:
+  #     - ./nginx/nginx.conf.ctmpl:/etc/consul-template/templates/nginx.conf.ctmpl
+  #   environment:
+  #     # Tell Consul-Template where to find Consul
+  #     CONSUL_HOST: consul-server
+  #     CONSUL_PORT: 8500
+  #   depends_on:
+  #     consul-server:
+  #       condition: service_healthy
+  #   networks:
+  #     - eapi-net
+
+  # frontend:
+  #   build:
+  #     context: fe
+  #     dockerfile: app.dockerfile
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     VITE_API_BASE_URL: nginx-gateway
+  #     VITE_API_PORT: 80
+  #     VITE_STUB_MODE: "true"
+  #   networks:
+  #     - eapi-net
+
+  kong:
+    image: docker.io/kong:latest
+    container_name: kong
     ports:
-      - "80:80"
-    volumes:
-      - ./nginx/nginx.conf.ctmpl:/etc/consul-template/templates/nginx.conf.ctmpl
+      - "8000:8000"
+      - "8443:8443"
+      - "8001:8001"
     environment:
-      # Tell Consul-Template where to find Consul
-      CONSUL_HOST: consul-server
-      CONSUL_PORT: 8500
+      # Use Consul for DNS resolution
+      KONG_DNS_RESOLVER: "consul-server:8600"
+      KONG_DATABASE: "off" # We will use declarative config
+      KONG_DECLARATIVE_CONFIG: "/usr/local/kong/declarative/kong.yml"
+    networks:
+      - eapi-net
     depends_on:
       consul-server:
         condition: service_healthy
-    networks:
-      - eapi-net
+    volumes:
+      - ./kong:/usr/local/kong/declarative
 
 volumes:
   consul_data:

@@ -1,0 +1,19 @@
+_format_version: "2.1"
+
+services:
+  - name: dynamic-consul-service
+    # This URL is a placeholder. The hostname will be dynamically replaced.
+    host: localhost
+    routes:
+      - name: dynamic-route
+        # This regex path captures the first part of the path (the service name).
+        paths:
+          - /services/(?<service_name>[^/]+)/?
+        strip_path: true
+        # This plugin rewrites the Host header and upstream URL.
+        plugins:
+          - name: request-transformer
+            config:
+              replace:
+                headers:
+                  - "Host: $(service_name).service.consul"
