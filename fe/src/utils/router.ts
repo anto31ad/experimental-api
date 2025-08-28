@@ -2,9 +2,9 @@ import { createRouter, createWebHistory } from 'vue-router';
 
 import BasePage from '@/components/BasePage.vue';
 
-import HomeView from '@/views/HomeView.vue';
+import HomeView from '@/components/HomeView.vue';
 import LoginPage from '@/components/LoginPage.vue';
-import ServiceView from '@/views/ServiceView.vue';
+import ServiceView from '@/components/ServiceView.vue';
 import AuthCallback from '@/components/AuthCallback.vue';
 import { isAuthenticated } from './requests';
 
