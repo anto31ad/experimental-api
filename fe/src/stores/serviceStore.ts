@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { requests } from '../utils/requests'
+import { API_ENDPOINTS } from '@/constants'
 
 export interface ServiceOverview {
   id: string,
@@ -64,7 +65,33 @@ export const useServiceStore = defineStore('service', {
         this.errorMessageList.push('Failed to fetch services: ' + err)
       } finally {
         this.loading = false
+        this.fetchThumbnails()
       }
+    },
+    async fetchThumbnails() {
+      if (this.isListEmpty) return;
+      
+      this.services.forEach(async (service) => {
+
+        let service_url = `${API_ENDPOINTS.root}/${service.thumbnail_url}`
+        let thumb_url: string | null = null
+        
+        if (service_url) {
+          thumb_url = await requests.getThumbnail(service_url)
+          if (thumb_url) {
+            this.thumbnails[service.id] = thumb_url
+            return;
+          }
+        }
+        //fallback to random pic
+        thumb_url = await requests.requestRandomPictureUrl()
+        console.log(thumb_url)
+        if (thumb_url) {
+          this.thumbnails[service.id] = thumb_url
+          return;
+        }
+        this.thumbnails[service.id] = ''
+      })
     },
     async fetchServiceById (serviceId: string) {
 

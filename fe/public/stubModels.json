@@ -1,6 +1,6 @@
 [
     {
-        "id": "1",
+        "id": "iris",
         "name": "Iris Subspecies Classifier",
         "parameters": [
             {
@@ -23,7 +23,7 @@
         "description": "Predicts if flower is Iris Setosa, Iris Versicolor or Iris Virginica based on the petal and sepal length and width"
     },
     {
-        "id": "2",
+        "id": "digits",
         "name": "8x8 Handwritten Digits Recognizer",
         "parameters": [
             {

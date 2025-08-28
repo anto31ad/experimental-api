@@ -41,12 +41,29 @@ const requestListOfServices = async (): Promise<ServiceOverview[]> => {
 
 const requestRandomPictureUrl = async () => {
   
-  const thumbnailRes = await fetch('https://picsum.photos/400/200');
-
-  if(!thumbnailRes.ok) {
-    throw Error("Could not obtain an url for a random picture")
+  try {
+    const thumbnailRes = await fetch('https://picsum.photos/400/200');
+  
+    if(!thumbnailRes.ok) {
+      return null;
+    }
+    return thumbnailRes.url;
+  } catch {
+    return null;
   }
-  return thumbnailRes.url;
+}
+
+const getThumbnail = async (url: string) => {
+
+  try {
+    const res = await fetch(url)
+    if (!res.ok) {
+      return null
+    }
+    return res.url
+  } catch {
+    return null
+  } 
 }
 
 const requestServiceInfoById = async (serviceId: string): Promise<Service> => {
@@ -109,7 +126,7 @@ const requestOperationByServiceId = async (
 const requestThisUser = async () => {
   const res = await fetchWithAuth(API_ENDPOINTS.thisUser)
   if (!res.ok) {
-    throw Error(`Cannot fetch this user ${res.statusText}`)
+    return null
   }
   const user = await res.json();
   return user
@@ -147,5 +164,6 @@ export const requests = {
   requestThisUser,
   login,
   logout,
-  isAuthenticated
+  isAuthenticated,
+  getThumbnail
 };

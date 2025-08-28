@@ -1,8 +1,7 @@
 <template>
   <div class="card">
     <img
-      :src="thumbnailUrl"
-      @error="onImgError"
+      :src="thumbnail_url"
       alt="Card image"
       class="card-image" />
     <div class="card-body">
@@ -19,29 +18,25 @@
 </template>
 
 <script setup lang="ts">
-import { API_ENDPOINTS } from '@/constants';
-import { ref, watchEffect } from 'vue';
+import { useServiceStore } from '@/stores/serviceStore';
+import { storeToRefs } from 'pinia';
+import { computed } from 'vue';
+
+const serviceStore = useServiceStore()
+const { thumbnails } = storeToRefs(serviceStore) 
 
 const props = defineProps({
   title: String,
   text: String,
-  imageUrl: String
+  serviceId: String,
 })
 
-const thumbnailUrl = ref('loading.png');
-
-watchEffect(async () => {
-
-  if (props.imageUrl) {
-    thumbnailUrl.value = `${API_ENDPOINTS.root}${props.imageUrl}`;
-  } else {
-    //thumbnailUrl.value = await request.requestRandomPictureUrl();
+const thumbnail_url = computed(() => {
+  if (props.serviceId) {
+    return thumbnails.value[props.serviceId]
   }
-});
-
-function onImgError() {
-  thumbnailUrl.value = '';
-}
+  return 'loading.png'
+})
 
 </script>
 <style scoped>
