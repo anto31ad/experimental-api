@@ -18,7 +18,7 @@ const fetchWithAuth = async (
   return res;
 }
 
-export const requestListOfServices = async (): Promise<ServiceOverview[]> => {
+const requestListOfServices = async (): Promise<ServiceOverview[]> => {
 
   if (DEV_OPTIONS.stubModeOn) {
     const res = await fetch(DEV_OPTIONS.stubServicesPath);
@@ -39,7 +39,7 @@ export const requestListOfServices = async (): Promise<ServiceOverview[]> => {
   return obj.data
 };
 
-export const requestRandomPictureUrl = async () => {
+const requestRandomPictureUrl = async () => {
   
   const thumbnailRes = await fetch('https://picsum.photos/400/200');
 
@@ -49,7 +49,7 @@ export const requestRandomPictureUrl = async () => {
   return thumbnailRes.url;
 }
 
-export const requestServiceInfoById = async (serviceId: string): Promise<Service> => {
+const requestServiceInfoById = async (serviceId: string): Promise<Service> => {
 
   if (DEV_OPTIONS.stubModeOn) {
     const response = await fetch(DEV_OPTIONS.stubServicesPath);
@@ -76,7 +76,7 @@ export const requestServiceInfoById = async (serviceId: string): Promise<Service
   return obj.data;
 };
 
-export const requestOperationByServiceId = async (
+const requestOperationByServiceId = async (
   serviceId: string,
   payload: JSON) => {
 
@@ -106,7 +106,7 @@ export const requestOperationByServiceId = async (
   return obj.data;
 };
 
-export const requestThisUser = async () => {
+const requestThisUser = async () => {
   const res = await fetchWithAuth(API_ENDPOINTS.thisUser)
   if (!res.ok) {
     throw Error(`Cannot fetch this user ${res.statusText}`)
@@ -115,14 +115,14 @@ export const requestThisUser = async () => {
   return user
 }
 
-export const login = () => {
+const login = () => {
   if (DEV_OPTIONS.stubModeOn) {
     return;
   }
   window.location.href = `${API_ENDPOINTS.loginWithGitHub}?next_url=http://localhost:3000/login/callback`;
 }
 
-export const logout = () => {
+const logout = () => {
   localStorage.setItem("expAPI_isLoggedIn", 'false');
 
   if (DEV_OPTIONS.stubModeOn) {
@@ -131,10 +131,21 @@ export const logout = () => {
   window.location.href = `${API_ENDPOINTS.logout}?next_url=http://localhost:3000/`;
 }
 
-export const isAuthenticated = () => {
+const isAuthenticated = () => {
   if (DEV_OPTIONS.stubModeOn) {
     return true
   }
   const storedVar = localStorage.getItem("expAPI_isLoggedIn") === 'true'
   return storedVar
 }
+
+export const requests = {
+  requestListOfServices,
+  requestRandomPictureUrl,
+  requestServiceInfoById,
+  requestOperationByServiceId,
+  requestThisUser,
+  login,
+  logout,
+  isAuthenticated
+};

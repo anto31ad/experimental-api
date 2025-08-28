@@ -16,14 +16,14 @@ import { useRouter } from 'vue-router';
 import { ref, watchEffect } from 'vue';
 
 import { useNavigationStore } from '@/stores/navigationStore';
-import { isAuthenticated, login } from '@/utils/requests';
+import { requests } from '@/utils/requests';
 
 const navigator = useNavigationStore(useRouter());
 const errorMessage = ref('');
 
 watchEffect(async () => {
 
-  if(isAuthenticated()) {
+  if(requests.isAuthenticated()) {
     navigator.goHome()
     return;
   }

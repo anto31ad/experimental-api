@@ -3,42 +3,32 @@
     <h1>{{ curService.name }}</h1>
     <p> {{ curService.description }}</p>
     <hr>
-    <div v-if="curService">
-      <component v-if="customComponent" :is="customComponent"/>
-    </div>
-    <div v-else>
-      Loading...
-    </div>
+    <ServiceInputForm/>
+  </div>
+  <div v-else>
+    Loading...
   </div>
 </template>
-<script setup>
-import { ref, computed, watchEffect, markRaw } from 'vue';
+<script setup lang="ts">
+import { watchEffect } from 'vue';
 import { useRoute } from 'vue-router';
 
-import Table from '@/components/CustomTable.vue';
 import { useServiceStore } from '@/stores/serviceStore';
-import DigitsCanvas from '@/components/digits-predictor/DigitCanvas.vue';
-import IrisForm from '@/components/iris-predictor/IrisForm.vue';
-import { useUserStore } from '@/stores/userStore';
+import { storeToRefs } from 'pinia';
+import ServiceInputForm from './ServiceInputForm.vue';
 
 const route = useRoute()
 const serviceStore = useServiceStore()
-const userStore = useUserStore()
 
 //const serviceId = ref(null)
-const curService = computed( () => serviceStore.getSelected)
-
-const customComponents = {
-  // <service id>: <Raw Component>
-  1: markRaw(IrisForm),
-  2: markRaw(DigitsCanvas),
-}
-const customComponent = ref(null)
+const { selectedService: curService } = storeToRefs(serviceStore)
 
 watchEffect(async () => {
-  const serviceId = route.params.id
-  serviceStore.fetchServiceById(serviceId, userStore)
-  customComponent.value = customComponents[serviceId]
+  let serviceId = route.params.id
+  if (Array.isArray(serviceId)) {
+    serviceId = serviceId[0]
+  }
+  serviceStore.fetchServiceById(serviceId)
 })
 
 </script>

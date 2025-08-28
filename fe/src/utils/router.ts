@@ -6,7 +6,7 @@ import HomeView from '@/components/HomeView.vue';
 import LoginPage from '@/components/LoginPage.vue';
 import ServiceView from '@/components/ServiceView.vue';
 import AuthCallback from '@/components/AuthCallback.vue';
-import { isAuthenticated } from './requests';
+import { requests } from './requests';
 
 const routes = [
   {
@@ -43,7 +43,7 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  const isAuth = isAuthenticated();
+  const isAuth = requests.isAuthenticated();
 
   if (isAuth && to.path.includes('/login')) {
     // user is already authenticated but tries to access the login page;

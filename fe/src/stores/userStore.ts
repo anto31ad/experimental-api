@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { DEV_OPTIONS } from '../constants'
-import { requestThisUser } from '@/utils/requests'
+import { requests } from '@/utils/requests'
 
 export const useUserStore = defineStore('user', {
   state: () => ({
@@ -17,7 +17,7 @@ export const useUserStore = defineStore('user', {
         this.username = 'guest'
         return;
       }
-      const user = await requestThisUser()
+      const user = await requests.requestThisUser()
       this.username = user.username
       this.userGitHubId = user.github_id
     },

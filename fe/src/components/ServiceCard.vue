@@ -18,9 +18,8 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { API_ENDPOINTS } from '@/constants';
-import { requestRandomPictureUrl } from '@/utils/requests';
 import { ref, watchEffect } from 'vue';
 
 const props = defineProps({
@@ -36,12 +35,12 @@ watchEffect(async () => {
   if (props.imageUrl) {
     thumbnailUrl.value = `${API_ENDPOINTS.root}${props.imageUrl}`;
   } else {
-    thumbnailUrl.value = await requestRandomPictureUrl();
+    //thumbnailUrl.value = await request.requestRandomPictureUrl();
   }
 });
 
 function onImgError() {
-  thumbnailUrl.value = null;
+  thumbnailUrl.value = '';
 }
 
 </script>

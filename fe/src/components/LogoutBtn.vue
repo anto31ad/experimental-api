@@ -1,9 +1,9 @@
 <template>
-  <button @click="logout">
+  <button @click="requests.logout">
     Log out
   </button>
 </template>
   
-<script setup>
-import { logout } from '@/utils/requests';
+<script setup lang="ts">
+import { requests } from '@/utils/requests';
 </script>

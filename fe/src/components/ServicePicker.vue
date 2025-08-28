@@ -17,11 +17,13 @@
     <p>No data available</p>
   </div>
 </template>
-<script setup>
+
+<script setup lang="ts">
+import type { ServiceOverview } from '@/stores/serviceStore';
 import Card from './ServiceCard.vue'
 
 defineProps({
-  itemList: Array,
+  itemList: Array<ServiceOverview>,
 })
 </script>
 

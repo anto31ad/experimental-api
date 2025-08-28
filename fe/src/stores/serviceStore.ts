@@ -1,8 +1,5 @@
 import { defineStore } from 'pinia'
-import {
-  requestListOfServices,
-  requestOperationByServiceId,
-  requestServiceInfoById } from '../utils/requests'
+import { requests } from '../utils/requests'
 
 export interface ServiceOverview {
   id: string,
@@ -27,6 +24,7 @@ export const useServiceStore = defineStore('service', {
   state: () => ({
     services: [] as ServiceOverview[],
     selectedService: null as Service | null,
+    thumbnails: {} as { [key: string]: string },
     loading: false,
     errorMessageList: [] as Array<string>,
     lastResponse: null as JSON | null,
@@ -61,7 +59,7 @@ export const useServiceStore = defineStore('service', {
       console.info("fetching services...")
       this.initUtils()
       try {
-        this.services = await requestListOfServices()
+        this.services = await requests.requestListOfServices()
       } catch (err) {
         this.errorMessageList.push('Failed to fetch services: ' + err)
       } finally {
@@ -73,7 +71,7 @@ export const useServiceStore = defineStore('service', {
       this.initUtils()
       console.log(`fetching service ${serviceId}`)
       try {
-        this.selectedService = await requestServiceInfoById(serviceId)
+        this.selectedService = await requests.requestServiceInfoById(serviceId)
       } catch (err) {
         this.errorMessageList.push(`${err}`)
       } finally {
@@ -87,7 +85,7 @@ export const useServiceStore = defineStore('service', {
 
       this.initUtils()
       try {
-        this.lastResponse = await requestOperationByServiceId(serviceId, payload)
+        this.lastResponse = await requests.requestOperationByServiceId(serviceId, payload)
       } catch (err) {
         this.errorMessageList.push(`Problem while making request to service '${serviceId}' :${err}`)
       } finally {
