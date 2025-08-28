@@ -1,5 +1,5 @@
-import { API_ENDPOINTS, DEV_OPTIONS } from '../constants'
-import type { Service, ServiceOverview } from '../stores/serviceStore'
+import { API_ENDPOINTS, DEV_OPTIONS } from '@/constants'
+import type { Service, ServiceOverview } from '@/stores/serviceStore'
 
 const fetchWithAuth = async (
   url: string,
