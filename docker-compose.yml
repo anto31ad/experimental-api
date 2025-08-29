@@ -20,9 +20,7 @@ services:
   #     - eapi-net
 
   # demo-services-server:
-  #   build:
-  #     context: demo-services
-  #     dockerfile: demo_services.dockerfile
+  #   build: demo-services
   #   ports:
   #     - "9000:9000"
   #   environment:
@@ -37,9 +35,7 @@ services:
   #     - consul-server
 
   # iris-server:
-  #   build:
-  #     context: iris-server
-  #     dockerfile: iris.dockerfile
+  #   build: iris-server
   #   ports:
   #     - "9001:9001"
   #   environment:
@@ -54,9 +50,7 @@ services:
   #     - consul-server
 
   # nginx-gateway:
-  #   build:
-  #     context: nginx
-  #     dockerfile: nginx.dockerfile
+  #   build: nginx
   #   container_name: nginx-gateway
   #   ports:
   #     - "80:80"
@@ -72,6 +66,20 @@ services:
   #   networks:
   #     - eapi-net
 
+  backend:
+    build: be
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./be:/app
+    environment:
+      FRONTEND_HOST: localhost
+      FRONTEND_PORT: 3000
+      THIS_HOST: backend
+      THIS_PORT: 8000
+    networks:
+      - eapi-net
+
   frontend:
     build:
       context: fe
@@ -80,8 +88,8 @@ services:
     volumes:
       - ./fe:/app
     environment:
-      VITE_API_BASE_URL: nginx-gateway
-      VITE_API_PORT: 80
+      VITE_API_HOST: localhost
+      VITE_API_PORT: 8000
     networks:
       - eapi-net
 

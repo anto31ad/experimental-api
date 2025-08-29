@@ -1,7 +1,7 @@
 import pickle
 from logging import Logger
 
-from schema import Service, ServiceOutput
+from .schema import Service, ServiceOutput
 
 
 def _serve_iris(input_payload: dict, logger: Logger) -> ServiceOutput:

@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pickle
 
-from src import paths
+from be import paths
 
 # Load the digits dataset
 digits = load_digits()

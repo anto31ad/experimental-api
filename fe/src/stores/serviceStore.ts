@@ -68,11 +68,10 @@ export const useServiceStore = defineStore('service', {
       
       this.services.forEach(async (service) => {
 
-        let service_url = `${API_ENDPOINTS.root}/${service.thumbnail_url}`
         let thumb_url: string | null = null
         
-        if (service_url) {
-          thumb_url = await requests.getThumbnail(service_url)
+        if (service.thumbnail_url) {
+          thumb_url = await requests.getThumbnail(service.thumbnail_url)
           if (thumb_url) {
             service.thumbnail_url = thumb_url
             return;
@@ -85,7 +84,7 @@ export const useServiceStore = defineStore('service', {
           service.thumbnail_url = thumb_url
           return;
         }
-        service.thumbnail_url = ''
+        service.thumbnail_url = undefined
       })
     },
     async fetchServiceById (serviceId: string) {
@@ -105,6 +104,7 @@ export const useServiceStore = defineStore('service', {
           }
         } else {
           // Add new service if not found
+          console.log("Adding new service")
           this.services.push(serviceInfo)
         }
       } catch (err) {

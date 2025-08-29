@@ -16,4 +16,7 @@
 
 <script setup lang="ts">
 import NavBar from './NavBar.vue';
+import { useServiceStore } from '@/stores/serviceStore';
+
+const serviceStore = useServiceStore()
 </script>

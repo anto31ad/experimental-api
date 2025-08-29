@@ -1,5 +1,10 @@
 <template>
-  <div v-if="curService">
+  <div v-if="serviceStore.hasErrors">
+    <div v-for="item in serviceStore.errorMessageList" :key="item">
+        {{ item }}
+    </div>
+  </div>
+  <div v-else-if="curService">
     <h1>{{ curService.name }}</h1>
     <p> {{ curService.description }}</p>
     <hr/>

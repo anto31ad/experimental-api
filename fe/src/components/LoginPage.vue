@@ -2,7 +2,7 @@
   <h1>Experimental API</h1>
   <div class="login-page">
     <h2>Login</h2>
-    <form @submit.prevent="login">
+    <form @submit.prevent="requests.login">
       <button type="submit">Login with GitHub</button>
     </form>
     <div v-if="errorMessage" class="error-box">

@@ -7,7 +7,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.datasets import load_iris
 
-from src import paths
+from be import paths
 
 # Load the Iris dataset
 iris = load_iris()

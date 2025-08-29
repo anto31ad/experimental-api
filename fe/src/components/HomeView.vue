@@ -1,12 +1,10 @@
 <template>
   <h1>Experimental API</h1>
-  <div v-if="serviceStore.hasErrors">
-    <div v-for="item in serviceStore.errorMessageList" :key="item">
-        {{ item }}
-    </div>
-  </div>
-  <div v-else-if="serviceStore.services.length > 0">
+  <div v-if="serviceStore.services.length > 0">
     <ServicePicker :itemList="serviceStore.services"/>
+  </div>
+  <div v-else>
+    Empty.
   </div>
 </template>
 

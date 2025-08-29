@@ -24,7 +24,7 @@ from .schema import (
     Service
 )
 
-from .. import config
+from . import config
 from . import db
 from .services import serve
 
@@ -43,12 +43,12 @@ async def lifespan(app: FastAPI):
     global SERVICES_DB
 
     logger.info("Loading database...")
-    SERVICES_DB = db.load_services(logger)
+    # SERVICES_DB = db.load_services(logger)
 
     yield
 
     logger.info("Saving database...")
-    db.save_services(logger, SERVICES_DB)
+    # db.save_services(logger, SERVICES_DB)
 
 
 
@@ -173,160 +173,40 @@ async def read_current_user(
 async def list_available_services(
     current_user: Annotated[str, Depends(get_current_github_user)]
 ):
-    services_list = []
-    for id, service in SERVICES_DB.items():
-        services_list.append({
-            'id': id,
-            'name': service.name,
-            'description': service.description,
-            'thumbnail_url': service.thumbnail_url
-        }) 
-
     return {
         "message": HTTPStatus.OK.phrase,
         "status-code": HTTPStatus.OK,
-        "data": services_list,
-    }
-
-
-@app.get("/services/{service_id}", tags=["Services"])
-async def list_service_info(
-    current_user: Annotated[str, Depends(get_current_github_user)],
-    service_id: Annotated[str, Path(title="The ID of the item to get")],
-):
-
-    service = SERVICES_DB.get(service_id)
-    if not service:
-        return {
-            "status-code": HTTPStatus.NOT_FOUND,
-            "message": HTTPStatus.NOT_FOUND.phrase,
-            "details" : f"Service with id {service_id} not Found"
-        }
-
-    return {
-        "message": HTTPStatus.OK.phrase,
-        "status-code": HTTPStatus.OK,
-        "data": service,
-    }
-
-
-@app.post("/services", tags=["Services"])
-async def create_service(
-    current_user: Annotated[str, Depends(get_current_github_user)],
-    payload: dict = {
-        'name': 'Untitled',
-        'parameters': [
+        "data": [
             {
-                'name': 'Untitled',
-                'description': '',
-                'data_type': '',
+                'id': 'iris',
+                'name': 'iris',
+                'description': 'description'
+            },
+            {
+                'id': 'digits',
+                'name': 'Digits Classifier',
+                'description': 'description'
             }
         ],
-        'description': '',
     }
-):
-    if not payload:
-        raise HTTPException(
-            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-            detail="Payload is required"
-        )
 
-    new_service = Service(**payload)
-    new_service_id = db.create_service(logger, SERVICES_DB, new_service)
-    if not new_service_id:
-        raise HTTPException(
-            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            detail="Could not add service due to conflicting id."
-        )
-
-    response = new_service.model_dump()
-    response['id'] = new_service_id
-    return response
-
-@app.patch("/services/{service_id}", tags=["Services"])
-async def update_service(
+@app.get("/services/{item_id}", tags=["Services"])
+async def get_service_info(
     current_user: Annotated[str, Depends(get_current_github_user)],
-    service_id: Annotated[str, Path(title="The ID of the item to get")],
-    payload: dict,
+    item_id: str,
 ):
-    service = SERVICES_DB.get(service_id)
-    if not service:
-        return {
-            "status-code": HTTPStatus.NOT_FOUND,
-            "message": HTTPStatus.NOT_FOUND.phrase,
-            "details" : f"Service with id {service_id} not found"
-        }
     
-    upd_service: Service
-    try:
-        upd_service = Service(**{**service.model_dump(), **payload})
-    except ValidationError:
-        raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
-            detail="Could not update service: check payload syntax."
-        )
-
-    SERVICES_DB[service_id] = upd_service
-    return {
-        "message": HTTPStatus.OK.phrase,
-        "status-code": HTTPStatus.OK,
-        "data": upd_service.model_dump() | {"id": service_id}
-    }
-
-
-@app.delete("/services/{service_id}", tags=["Services"])
-async def delete_service(
-    current_user: Annotated[str, Depends(get_current_github_user)],
-    service_id: Annotated[str, Path(title="The ID of the item to get")],
-):
-
-    removed = SERVICES_DB.pop(service_id, None)
-    if not removed:
-        return {
-            "status-code": HTTPStatus.NOT_FOUND,
-            "message": HTTPStatus.NOT_FOUND.phrase,
-            "details": f"Service with id {service_id} not found"
-        }
-
-    return {
-        "status-code": HTTPStatus.OK,
-        "message": HTTPStatus.OK.phrase,
-        "details": f"Service with id {service_id} deleted",
-        "deleted": removed.model_dump()
-    }
-
-@app.post("/services/{service_id}/use", tags=["Services"])
-async def use_service(
-    current_user: Annotated[str, Depends(get_current_github_user)],
-    service_id: Annotated[str, Path(title="The ID of the item to get")],
-    payload: dict,
-):
-
-    service = SERVICES_DB.get(service_id)
-    if not service:
+    if item_id != 'iris':
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
-            detail=f"Service with id {service_id} not found"
-        )
+            detail=HTTPStatus.NOT_FOUND.phrase)
 
-
-    output = serve(service, payload, logger)
-
-    if len(output.errors) == 0:
-        return {
-            "message": HTTPStatus.OK.phrase,
-            "status-code": HTTPStatus.OK,
-            "data": output
-        }
-
-    # if there are errors...
-    expected_params = [ param.model_dump() for param in service.parameters] 
-    raise HTTPException(
-        status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-        detail={
-            'service_id': service_id,
-            'errors': output.errors,
-            'input_data': payload,
-            'expected_params': expected_params
-        }
-    )
+    return {
+        "message": HTTPStatus.OK.phrase,
+        "status-code": HTTPStatus.OK,
+        "data": {
+                'id': 'iris',
+                'name': 'Iris Classifier',
+                'description': 'description'
+            },
+    }

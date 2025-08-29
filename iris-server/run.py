@@ -1,6 +1,6 @@
 import uvicorn
 
-from src import main
+from be import main
 
 if __name__ == "__main__":
     uvicorn.run(
