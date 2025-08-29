@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
 import { requests } from '../utils/requests'
-import { API_ENDPOINTS } from '@/constants'
 
 export interface ServiceParameter {
   name: string,
