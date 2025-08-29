@@ -25,8 +25,6 @@ from .schema import (
 )
 
 from . import config
-from . import db
-from .services import serve
 
 
 SERVICES_DB: dict[str, Service] = {}
@@ -40,10 +38,13 @@ async def lifespan(app: FastAPI):
 
     Used to load the database into memory.
     """
-    global SERVICES_DB
+    #global SERVICES_DB
 
     logger.info("Loading database...")
     # SERVICES_DB = db.load_services(logger)
+
+    logger.info(f"be: {config.THIS_PROCESS}")
+    logger.info(f"fe: {config.FRONTEND_PROCESS}")
 
     yield
 
