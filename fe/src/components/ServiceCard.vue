@@ -32,10 +32,15 @@ const props = defineProps({
 })
 
 const thumbnail_url = computed(() => {
-  if (props.serviceId) {
-    return thumbnails.value[props.serviceId]
+  if (!props.serviceId) {
+    return;
   }
-  return 'loading.png'
+  let url = thumbnails.value[props.serviceId]
+  
+  if (!url) {
+    return 'loading.png'
+  }
+  return url
 })
 
 </script>
