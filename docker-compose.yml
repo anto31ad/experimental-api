@@ -69,14 +69,16 @@ services:
   backend:
     build: be
     ports:
-      - "8000:8000"
+      - "${BACKEND_ENTRY_PORT}:${BACKEND_ENTRY_PORT}"
     volumes:
       - ./be:/app
     environment:
-      FRONTEND_HOST: localhost
-      FRONTEND_PORT: 3000
-      THIS_HOST: backend
-      THIS_PORT: 8000
+      FRONTEND_HOST: ${FRONTEND_HOST}
+      FRONTEND_PORT: ${FRONTEND_PORT}
+      THIS_HOST: ${BACKEND_ENTRY_HOST}
+      THIS_PORT: ${BACKEND_ENTRY_PORT}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
     networks:
       - eapi-net
 
@@ -84,12 +86,12 @@ services:
     build:
       context: fe
     ports:
-      - "3000:3000"
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
     volumes:
       - ./fe:/app
     environment:
-      VITE_API_HOST: localhost
-      VITE_API_PORT: 8000
+      VITE_API_HOST: ${BACKEND_ENTRY_HOST}
+      VITE_API_PORT: ${BACKEND_ENTRY_PORT}
     networks:
       - eapi-net
 
