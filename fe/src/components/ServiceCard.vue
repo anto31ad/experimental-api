@@ -1,7 +1,7 @@
 <template>
   <div class="card">
     <img
-      :src="thumbnail_url"
+      :src="thumbnailUrl"
       alt="Card image"
       class="card-image" />
     <div class="card-body">
@@ -18,32 +18,22 @@
 </template>
 
 <script setup lang="ts">
-import { useServiceStore } from '@/stores/serviceStore';
-import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
-
-const serviceStore = useServiceStore()
-const { thumbnails } = storeToRefs(serviceStore) 
 
 const props = defineProps({
   title: String,
   text: String,
-  serviceId: String,
+  thumbnailUrl: String,
 })
 
-const thumbnail_url = computed(() => {
-  if (!props.serviceId) {
-    return;
+const thumbnailUrl = computed(() => {
+  if (!props.thumbnailUrl) {
+    return 'loading.png';
   }
-  let url = thumbnails.value[props.serviceId]
-  
-  if (!url) {
-    return 'loading.png'
-  }
-  return url
+  return props.thumbnailUrl
 })
-
 </script>
+
 <style scoped>
 .card {
   min-width: 200px;

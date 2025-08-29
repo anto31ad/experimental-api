@@ -9,7 +9,7 @@
       <Card
         :title="item.name"
         :text="item.description"
-        :service-id="item.id"
+        :thumbnail-url="item.thumbnail_url"
       />
     </router-link>
   </div>
@@ -19,11 +19,11 @@
 </template>
 
 <script setup lang="ts">
-import type { ServiceOverview } from '@/stores/serviceStore';
+import type { Service } from '@/stores/serviceStore';
 import Card from './ServiceCard.vue'
 
 defineProps({
-  itemList: Array<ServiceOverview>,
+  itemList: Array<Service>,
 })
 </script>
 

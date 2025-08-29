@@ -2,13 +2,6 @@ import { defineStore } from 'pinia'
 import { requests } from '../utils/requests'
 import { API_ENDPOINTS } from '@/constants'
 
-export interface ServiceOverview {
-  id: string,
-  name?: string,
-  description?: string,
-  thumbnail_url?: string,
-}
-
 export interface ServiceParameter {
   name: string,
   expects: string,
@@ -18,37 +11,39 @@ export interface Service {
   id: string,
   name?: string,
   description?: string,
+  thumbnail_url?: string,
   parameters?: ServiceParameter[],
+  lastResponse?: JSON,
 }
 
 export const useServiceStore = defineStore('service', {
   state: () => ({
-    services: [] as ServiceOverview[],
-    selectedService: null as Service | null,
-    thumbnails: {} as { [key: string]: string },
+    services: [] as Service[],
+    selectedServiceId: '' as string,
     loading: false,
     errorMessageList: [] as Array<string>,
-    lastResponse: null as JSON | null,
   }),
   getters: {
     getList: (state) => state.services,
     isListEmpty: (state) => state.services.length < 1,
-    getSelected: (state) => state.selectedService,
+    selectedService: (state) => {
+      return state.services.find(
+        service => (service.id === state.selectedServiceId)
+      )
+    },
     hasErrors: (state) => state.errorMessageList.length > 0,
   },
   actions: {
-    clearState() {
+    resetState() {
       this.loading = false
       this.errorMessageList = []
-      this.lastResponse = null
       this.services = []
-      this.selectedService = null
-      console.log("cleared service state")
+      console.log("reset service state")
     },
-    initUtils() {
+    resetServiceRequestState() {
       this.loading = true
       this.errorMessageList = []
-      console.log("initialized service utils")
+      console.log("reset service request state")
     },
     
     async fetchServices () {
@@ -58,7 +53,7 @@ export const useServiceStore = defineStore('service', {
         return;
       }
       console.info("fetching services...")
-      this.initUtils()
+      this.resetState()
       try {
         this.services = await requests.requestListOfServices()
       } catch (err) {
@@ -79,7 +74,7 @@ export const useServiceStore = defineStore('service', {
         if (service_url) {
           thumb_url = await requests.getThumbnail(service_url)
           if (thumb_url) {
-            this.thumbnails[service.id] = thumb_url
+            service.thumbnail_url = thumb_url
             return;
           }
         }
@@ -87,18 +82,31 @@ export const useServiceStore = defineStore('service', {
         thumb_url = await requests.requestRandomPictureUrl()
         console.log(thumb_url)
         if (thumb_url) {
-          this.thumbnails[service.id] = thumb_url
+          service.thumbnail_url = thumb_url
           return;
         }
-        this.thumbnails[service.id] = ''
+        service.thumbnail_url = ''
       })
     },
     async fetchServiceById (serviceId: string) {
 
-      this.initUtils()
+      this.resetServiceRequestState()
+      this.selectedServiceId = serviceId
       console.log(`fetching service ${serviceId}`)
       try {
-        this.selectedService = await requests.requestServiceInfoById(serviceId)
+        const serviceInfo = await requests.requestServiceInfoById(serviceId)
+        
+        const index = this.services.findIndex(service => service.id === serviceId)
+        if (index !== -1) {
+          // Replace existing service with updated info
+          this.services[index] = {
+            ...this.services[index],
+            ...serviceInfo
+          }
+        } else {
+          // Add new service if not found
+          this.services.push(serviceInfo)
+        }
       } catch (err) {
         this.errorMessageList.push(`${err}`)
       } finally {
@@ -110,9 +118,13 @@ export const useServiceStore = defineStore('service', {
       payload: JSON,
     ) {
 
-      this.initUtils()
+      this.resetServiceRequestState()
       try {
-        this.lastResponse = await requests.requestOperationByServiceId(serviceId, payload)
+        const responseData = await requests.requestOperationByServiceId(serviceId, payload)
+        this.services.forEach(service => {
+          if (service.id !== serviceId) return
+          service.lastResponse = responseData
+        })
       } catch (err) {
         this.errorMessageList.push(`Problem while making request to service '${serviceId}' :${err}`)
       } finally {

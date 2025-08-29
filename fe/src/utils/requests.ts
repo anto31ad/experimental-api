@@ -1,5 +1,5 @@
 import { API_ENDPOINTS, DEV_OPTIONS } from '@/constants'
-import type { Service, ServiceOverview } from '@/stores/serviceStore'
+import type { Service } from '@/stores/serviceStore'
 
 const fetchWithAuth = async (
   url: string,
@@ -18,7 +18,7 @@ const fetchWithAuth = async (
   return res;
 }
 
-const requestListOfServices = async (): Promise<ServiceOverview[]> => {
+const requestListOfServices = async (): Promise<Service[]> => {
 
   if (DEV_OPTIONS.stubModeOn) {
     const res = await fetch(DEV_OPTIONS.stubServicesPath);
