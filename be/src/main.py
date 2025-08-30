@@ -179,12 +179,7 @@ async def list_available_services(
         services_response: dict = requests.get(f'{config.GATEWAY_PROCESS}/services').json()
         services_list = []
         for item in services_response.values():
-            service_id = item['Service']
-            service_info: dict | None = fetch_service_info(service_id)
-            if not service_info:
-                continue
-            service_info['id'] = service_id
-            services_list.append(service_info)
+            services_list.append(item['Service'])
     except:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
@@ -196,7 +191,25 @@ async def list_available_services(
         "data": services_list
     }
 
-@app.post("/services/{service_id}", tags=["Services"])
+@app.get("/services/{service_id}")
+async def get_service_info(
+    current_user: Annotated[str, Depends(get_current_github_user)],
+    service_id: str,
+):
+    service_info: dict | None = fetch_service_info(service_id)
+    if not service_info:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail=HTTPStatus.NOT_FOUND.phrase)
+
+    service_info['id'] = service_id
+    return {
+        "message": HTTPStatus.OK.phrase,
+        "status-code": HTTPStatus.OK,
+        "data": service_info
+    }
+
+@app.post("/services/{service_id}")
 async def use_service(
     current_user: Annotated[str, Depends(get_current_github_user)],
     service_id: str,

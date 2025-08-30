@@ -18,7 +18,7 @@ const fetchWithAuth = async (
   return res;
 }
 
-const requestListOfServices = async (): Promise<Service[]> => {
+const requestListOfServices = async (): Promise<string[]> => {
 
   if (DEV_OPTIONS.stubModeOn) {
     const res = await fetch(DEV_OPTIONS.stubServicesPath);

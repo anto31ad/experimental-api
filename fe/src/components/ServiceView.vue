@@ -55,7 +55,7 @@ watchEffect(async () => {
   if (Array.isArray(serviceId)) {
     serviceId = serviceId[0]
   }
-  serviceStore.fetchServiceById(serviceId)
+  serviceStore.selectService(serviceId)
 })
 </script>
 

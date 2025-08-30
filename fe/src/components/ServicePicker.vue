@@ -9,7 +9,7 @@
       <Card
         :title="item.name"
         :text="item.description"
-        :thumbnail-url="item.thumbnail_url"
+        :thumbnail-url="getThumbnail(item)"
       />
     </router-link>
   </div>
@@ -25,6 +25,12 @@ import Card from './ServiceCard.vue'
 defineProps({
   itemList: Array<Service>,
 })
+
+const getThumbnail = (item: Service) => {
+  if (item.thumbnail_url)
+    return item.thumbnail_url;
+  return item.alt_thumbnail_url;
+}
 </script>
 
 <style scoped>

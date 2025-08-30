@@ -12,6 +12,7 @@ export interface Service {
   name?: string,
   description?: string,
   thumbnail_url?: string,
+  alt_thumbnail_url?: string,
   parameters?: ServiceParameter[],
   lastResponse?: JSON,
 }
@@ -31,15 +32,12 @@ export const useServiceStore = defineStore('service', {
         service => (service.id === state.selectedServiceId)
       )
     },
+    findServiceIndex: (state) => (id: string) => {
+      return state.services.findIndex(service => (service.id === id))
+    },
     hasErrors: (state) => state.errorMessageList.length > 0,
   },
   actions: {
-    resetState() {
-      this.loading = false
-      this.errorMessageList = []
-      this.services = []
-      console.log("reset service state")
-    },
     resetServiceRequestState() {
       this.loading = true
       this.errorMessageList = []
@@ -47,71 +45,78 @@ export const useServiceStore = defineStore('service', {
     },
 
     async fetchServices () {
-      //skip if list is not empty
-      if (!this.isListEmpty) {
-        console.info("service list not empty")
-        return;
-      }
       console.info("fetching services...")
-      this.resetState()
       try {
-        this.services = await requests.requestListOfServices()
+        const serviceIdList = await requests.requestListOfServices()
+
+        for (const id of serviceIdList) {
+          // only fetch the details of service if they had not been already fetched  
+          let index = this.findServiceIndex(id)
+          if (index >= 0) {
+            console.info("service already fetched", id)
+            continue;
+          }
+          await this.fetchServiceById(id)
+          this.fetchServiceThumbnail(id)
+        }
       } catch (err) {
         this.errorMessageList.push('Failed to fetch services: ' + err)
       } finally {
         this.loading = false
-        this.fetchThumbnails()
       }
     },
-    async fetchThumbnails() {
-      if (this.isListEmpty) return;
+    async fetchServiceThumbnail(serviceId: string) {
 
-      this.services.forEach(async (service) => {
+      const service = this.services[this.findServiceIndex(serviceId)]
+      if (!service) {
+        console.error("Not valid index")
+        return;
+      }
 
-        let thumb_url: string | null = null
-
-        if (service.thumbnail_url) {
-          thumb_url = await requests.getThumbnail(service.thumbnail_url)
-          if (thumb_url) {
-            service.thumbnail_url = thumb_url
-            return;
-          }
-        }
-        //fallback to random pic
-        thumb_url = await requests.requestRandomPictureUrl()
-        console.log(thumb_url)
+      let thumb_url: string | null = null
+      if (service.thumbnail_url) {
+        thumb_url = await requests.getThumbnail(service.thumbnail_url)
         if (thumb_url) {
-          service.thumbnail_url = thumb_url
           return;
         }
-        service.thumbnail_url = undefined
-      })
+      }
+      service.thumbnail_url = undefined
+      //fallback to random pic
+      thumb_url = await requests.requestRandomPictureUrl()
+      console.log(thumb_url)
+      if (thumb_url) {
+        service.alt_thumbnail_url = thumb_url
+        return;
+      }
+      service.alt_thumbnail_url = undefined
+    },
+    async selectService(serviceId: string) {
+      this.selectedServiceId = serviceId
+      this.fetchServiceById(serviceId)
     },
     async fetchServiceById (serviceId: string) {
+      try {
+        this.resetServiceRequestState()
+        console.log(`fetching service ${serviceId}`)
+        const serviceInfo = await requests.requestServiceInfoById(serviceId)
 
-      this.selectedServiceId = serviceId
-      // this.resetServiceRequestState()
-      // console.log(`fetching service ${serviceId}`)
-      // try {
-      //   const serviceInfo = await requests.requestServiceInfoById(serviceId)
-
-      //   const index = this.services.findIndex(service => service.id === serviceId)
-      //   if (index !== -1) {
-      //     // Replace existing service with updated info
-      //     this.services[index] = {
-      //       ...this.services[index],
-      //       ...serviceInfo
-      //     }
-      //   } else {
-      //     // Add new service if not found
-      //     console.log("Adding new service")
-      //     this.services.push(serviceInfo)
-      //   }
-      // } catch (err) {
-      //   this.errorMessageList.push(`${err}`)
-      // } finally {
-      //   this.loading = false
-      // }
+        const index = this.findServiceIndex(serviceId)
+        if (index >= 0) {
+          // Replace existing service with updated info
+          this.services[index] = {
+            ...this.services[index],
+            ...serviceInfo
+          }
+        } else {
+          // Add new service if not found
+          console.log("Adding new service")
+          this.services.push(serviceInfo)
+        }
+      } catch (err) {
+        this.errorMessageList.push(`${err}`)
+      } finally {
+        this.loading = false
+      }
     },
     async makeServiceRequest(
       serviceId: string,
