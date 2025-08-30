@@ -45,7 +45,7 @@ export const useServiceStore = defineStore('service', {
       this.errorMessageList = []
       console.log("reset service request state")
     },
-    
+
     async fetchServices () {
       //skip if list is not empty
       if (!this.isListEmpty) {
@@ -65,11 +65,11 @@ export const useServiceStore = defineStore('service', {
     },
     async fetchThumbnails() {
       if (this.isListEmpty) return;
-      
+
       this.services.forEach(async (service) => {
 
         let thumb_url: string | null = null
-        
+
         if (service.thumbnail_url) {
           thumb_url = await requests.getThumbnail(service.thumbnail_url)
           if (thumb_url) {
@@ -89,29 +89,29 @@ export const useServiceStore = defineStore('service', {
     },
     async fetchServiceById (serviceId: string) {
 
-      this.resetServiceRequestState()
       this.selectedServiceId = serviceId
-      console.log(`fetching service ${serviceId}`)
-      try {
-        const serviceInfo = await requests.requestServiceInfoById(serviceId)
-        
-        const index = this.services.findIndex(service => service.id === serviceId)
-        if (index !== -1) {
-          // Replace existing service with updated info
-          this.services[index] = {
-            ...this.services[index],
-            ...serviceInfo
-          }
-        } else {
-          // Add new service if not found
-          console.log("Adding new service")
-          this.services.push(serviceInfo)
-        }
-      } catch (err) {
-        this.errorMessageList.push(`${err}`)
-      } finally {
-        this.loading = false
-      }
+      // this.resetServiceRequestState()
+      // console.log(`fetching service ${serviceId}`)
+      // try {
+      //   const serviceInfo = await requests.requestServiceInfoById(serviceId)
+
+      //   const index = this.services.findIndex(service => service.id === serviceId)
+      //   if (index !== -1) {
+      //     // Replace existing service with updated info
+      //     this.services[index] = {
+      //       ...this.services[index],
+      //       ...serviceInfo
+      //     }
+      //   } else {
+      //     // Add new service if not found
+      //     console.log("Adding new service")
+      //     this.services.push(serviceInfo)
+      //   }
+      // } catch (err) {
+      //   this.errorMessageList.push(`${err}`)
+      // } finally {
+      //   this.loading = false
+      // }
     },
     async makeServiceRequest(
       serviceId: string,

@@ -89,33 +89,27 @@ async def health_check() -> Dict[str, str]:
 @app.get("/info")
 async def get_info():
     return {
-        'name': 'Iris Classifier',
-        'description': 'Classifies into subspecies based on petal and sepal sizes',
-        'parameters': [
-            {
-                "name": "petal_length",
-                "description": "float"
-            },
-            {
-                "name": "petal_width",
-                "description": "float"
-            },
-            {
-                "name": "sepal_length",
-                "description": "float"
-            },
-            {
-                "name": "sepal_width",
-                "description": "float"
-            }
-        ],
-        'examples': {
-            '0 size': {
-                'petal_length': 0,
-                'petal_width': 0,
-                'sepal_length': 0,
-                'sepal_width': 0,
-            }
+        'data': {
+            'name': 'Iris Classifier!',
+            'description': 'Classifies into subspecies based on petal and sepal sizes',
+            'parameters': [
+                {
+                    "name": "petal_length",
+                    "description": "float"
+                },
+                {
+                    "name": "petal_width",
+                    "description": "float"
+                },
+                {
+                    "name": "sepal_length",
+                    "description": "float"
+                },
+                {
+                    "name": "sepal_width",
+                    "description": "float"
+                }
+            ],
         }
     }
 

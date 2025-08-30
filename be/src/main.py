@@ -1,4 +1,5 @@
 import logging
+import requests
 
 from contextlib import asynccontextmanager
 from http import HTTPStatus
@@ -14,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
-from .utils import validate_url
+from .utils import validate_url, fetch_service_info
 from .auth import (
     integrate_github_auth,
     get_current_github_user,
@@ -25,7 +26,6 @@ from .schema import (
 )
 
 from . import config
-
 
 SERVICES_DB: dict[str, Service] = {}
 
@@ -174,30 +174,18 @@ async def read_current_user(
 async def list_available_services(
     current_user: Annotated[str, Depends(get_current_github_user)]
 ):
-    return {
-        "message": HTTPStatus.OK.phrase,
-        "status-code": HTTPStatus.OK,
-        "data": [
-            {
-                'id': 'iris',
-                'name': 'iris',
-                'description': 'description'
-            },
-            {
-                'id': 'digits',
-                'name': 'Digits Classifier',
-                'description': 'description'
-            }
-        ],
-    }
 
-@app.get("/services/{item_id}", tags=["Services"])
-async def get_service_info(
-    current_user: Annotated[str, Depends(get_current_github_user)],
-    item_id: str,
-):
-    
-    if item_id != 'iris':
+    try:    
+        services_response: dict = requests.get(f'{config.GATEWAY_PROCESS}/services').json()
+        services_list = []
+        for item in services_response.values():
+            service_id = item['Service']
+            service_info: dict | None = fetch_service_info(service_id)
+            if not service_info:
+                continue
+            service_info['id'] = service_id
+            services_list.append(service_info)
+    except:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND,
             detail=HTTPStatus.NOT_FOUND.phrase)
@@ -205,9 +193,32 @@ async def get_service_info(
     return {
         "message": HTTPStatus.OK.phrase,
         "status-code": HTTPStatus.OK,
-        "data": {
-                'id': 'iris',
-                'name': 'Iris Classifier',
-                'description': 'description'
-            },
+        "data": services_list
+    }
+
+@app.post("/services/{service_id}", tags=["Services"])
+async def use_service(
+    current_user: Annotated[str, Depends(get_current_github_user)],
+    service_id: str,
+    payload: dict,
+):
+    
+    logger.info(payload)
+    response = requests.post(
+        url=f'{config.GATEWAY_PROCESS}/{service_id}/use',
+        json=payload)
+    
+    if not response.ok:
+        logger.info("Response not ok")
+        raise HTTPException(
+            status_code=response.status_code,
+            detail=response.content
+        )
+
+    data = response.json()
+
+    return {
+        "message": HTTPStatus.OK.phrase,
+        "status-code": HTTPStatus.OK,
+        "data": data
     }

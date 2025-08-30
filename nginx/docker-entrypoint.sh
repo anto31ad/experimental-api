@@ -2,6 +2,7 @@
 
 CONSUL_HOST=${CONSUL_HOST:-"consul-server"}
 CONSUL_PORT=${CONSUL_PORT:-"8500"}
+NGINX_PORT=${NGINX_PORT:-"8000"}
 NGINX_TEMPLATE_FILE=${NGINX_TEMPLATE_FILE:-"/etc/consul-template/templates/nginx.conf.ctmpl"}
 NGINX_CONFIG_FILE=${NGINX_CONFIG_FILE:-"/etc/nginx/nginx.conf"}
 

@@ -1,6 +1,6 @@
 FROM docker.io/nginx:latest
 
-RUN apt-get update && apt-get install curl unzip openssl wget
+RUN apt-get update && apt-get install -y curl unzip openssl wget
 
 # Download and install consul-template
 # Check https://releases.hashicorp.com/consul-template/ for the latest version
