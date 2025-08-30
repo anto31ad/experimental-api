@@ -1,12 +1,12 @@
 <template>
   <form v-if="curService && formData" @submit.prevent="submitForm" class="form-grid">
     <div v-for="param in curService.parameters">
-      <label :for="param.name">{{ param.name }} ({{ param.description }})</label>
-      <input
+      <label :for="param.name">{{ param.name }}</label>
+      <textarea
         :id="param.name"
         v-model="formData[param.name]"
-        :title="param.name"
-        required />
+        :title="param.description"
+        required></textarea>
     </div>
     <button type="submit" class="full-width">Submit</button>
   </form>
@@ -31,9 +31,10 @@ onMounted(()=> {
 })
 
 function submitForm() {
-  console.log('Form submitted:', formData.value)
   if (curService.value?.id){
-    serviceStore.makeServiceRequest(curService.value?.id, formData.value)
+    serviceStore.makeServiceRequest(
+      curService.value?.id, JSON.parse(JSON.stringify(formData.value))
+    )
   }
 }
 </script>

@@ -120,6 +120,7 @@ export const useServiceStore = defineStore('service', {
 
       this.resetServiceRequestState()
       try {
+        console.log(`Make Request to servie ${serviceId}`, payload)
         const responseData = await requests.requestOperationByServiceId(serviceId, payload)
         this.services.forEach(service => {
           if (service.id !== serviceId) return
