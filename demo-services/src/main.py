@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 from http import HTTPStatus
 from fastapi import FastAPI, HTTPException
 
-from .schema import IrisPayload, DigitsPayload
+from .schema import Payload, IrisPayload, DigitsPayload
 from .services import serve_digits, serve_iris
 
 logger = logging.getLogger("uvicorn")
@@ -85,48 +85,68 @@ async def health_check() -> Dict[str, str]:
     """Health check endpoint for Consul."""
     return {"status": "ok"}
 
-
-@app.post("/iris", tags=["Models"])
-async def use_iris(
-    payload: IrisPayload = IrisPayload(
-        petal_length=0,
-        petal_width=0,
-        sepal_length=0,
-        sepal_width=0
-    )
-):
-    try:
-        return {
-            "message": HTTPStatus.OK.phrase,
-            "status-code": HTTPStatus.OK,
-            "data": serve_iris(payload, logger)
+@app.get("/info")
+async def get_service_info():
+    return {
+        "message": HTTPStatus.OK.phrase,
+        "status-code": HTTPStatus.OK,
+        "data": {
+            'name': 'Demo Services!',
+            'description': "groups two models together: digits and iris",
+            "parameters": [
+                {
+                    'name': 'model_id',
+                    'description': "Takes 'digits' or 'iris'" 
+                },
+                {
+                    'name': 'model_input',
+                    'description': 'depending on model_id, the input data',
+                    'examples': {
+                        'Digits Example': {
+                            'pixels': "0.0;0.0;10.0;16.0;16.0;11.0;0.0;0.0;0.0;1.0;11.0;"
+                                      "7.0;6.0;16.0;3.0;0.0;0.0;0.0;0.0;0.0;10.0;15.0;0.0;0.0;"
+                                      "0.0;0.0;0.0;0.0;15.0;7.0;0.0;0.0;0.0;0.0;0.0;0.0;15.0;"
+                                      "9.0;0.0;0.0;0.0;0.0;0.0;0.0;7.0;13.0;0.0;0.0;0.0;0.0;"
+                                      "5.0;4.0;10.0;16.0;0.0;0.0;0.0;0.0;10.0;16.0;16.0;10.0;0.0;0.0"
+                        },
+                        'Iris Example': {
+                            'petal_length': 0,
+                            'petal_width': 0,
+                            'sepal_length': 0,
+                            'sepal_width': 0
+                        }
+                    }
+                }
+            ]
         }
+    }
 
+@app.post("/use")
+async def use_service(payload: Payload):
+
+    result_data = {}
+
+    try:
+        if payload.model_id == 'digits':
+            result_data = serve_digits(
+                DigitsPayload(**payload.model_input),
+                logger
+            )
+        elif payload.model_id == 'iris':
+            result_data = serve_iris(
+                IrisPayload(**payload.model_input),
+                logger
+            )
+        else:
+            raise Exception("Invalid Model ID")
     except Exception as e:
         raise HTTPException(
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
             detail=str(e)
         )
-    
 
-@app.post("/digits", tags=["Models"])
-async def use_digits(
-    payload: DigitsPayload = DigitsPayload(
-        pixels="0.0;0.0;10.0;16.0;16.0;11.0;0.0;0.0;0.0;1.0;11.0;"
-                "7.0;6.0;16.0;3.0;0.0;0.0;0.0;0.0;0.0;10.0;15.0;0.0;0.0;"
-                "0.0;0.0;0.0;0.0;15.0;7.0;0.0;0.0;0.0;0.0;0.0;0.0;15.0;"
-                "9.0;0.0;0.0;0.0;0.0;0.0;0.0;7.0;13.0;0.0;0.0;0.0;0.0;"
-                "5.0;4.0;10.0;16.0;0.0;0.0;0.0;0.0;10.0;16.0;16.0;10.0;0.0;0.0"
-    )
-):
-    try:
-        return {
-            "message": HTTPStatus.OK.phrase,
-            "status-code": HTTPStatus.OK,
-            "data": serve_digits(payload, logger)
-        }
-    except Exception as e:
-        raise HTTPException(
-            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
-            detail=str(e)
-        )
+    return {
+        "message": HTTPStatus.OK.phrase,
+        "status-code": HTTPStatus.OK,
+        "data": result_data
+    }

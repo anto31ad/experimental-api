@@ -1,8 +1,8 @@
 
-const API_BASE_URL = import.meta.env.VITE_API_HOST;
+const API_HOST = import.meta.env.VITE_API_HOST;
 const API_PORT = import.meta.env.VITE_API_PORT;
 
-const API_ADDRESS = `http://${API_BASE_URL}:${API_PORT}`;
+const API_ADDRESS = `http://${API_HOST}:${API_PORT}`;
 
 const STUB_MODE = import.meta.env.VITE_STUB_MODE === 'true';
 

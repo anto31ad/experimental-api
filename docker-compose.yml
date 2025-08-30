@@ -1,53 +1,57 @@
 services:
-  # consul-server:
-  #   image: docker.io/hashicorp/consul:latest
-  #   container_name: consul-server
-  #   # Command to run Consul in development mode with UI and accessible client interface
-  #   command: agent -dev -client=0.0.0.0 -bind=0.0.0.0 -ui
-  #   ports:
-  #     - "8500:8500" # HTTP API and UI
-  #     - "8600:8600/udp" # DNS interface (UDP)
-  #   volumes:
-  #     # Optional: Persist Consul's data if you stop/start the container.
-  #     # Remove this line and the 'volumes:' section at the bottom if you don't need persistence for development.
-  #     - ./consul_data:/consul/data
-  #   healthcheck:
-  #     test: ["CMD", "consul", "members"]
-  #     interval: 30s
-  #     timeout: 5s
-  #     retries: 5
-  #   networks:
-  #     - eapi-net
+  consul-server:
+    image: docker.io/hashicorp/consul:latest
+    container_name: consul-server
+    # Command to run Consul in development mode with UI and accessible client interface
+    command: agent -dev -client=0.0.0.0 -bind=0.0.0.0 -ui
+    ports:
+      - "8500:8500" # HTTP API and UI
+      - "8600:8600/udp" # DNS interface (UDP)
+    volumes:
+      # Optional: Persist Consul's data if you stop/start the container.
+      # Remove this line and the 'volumes:' section at the bottom if you don't need persistence for development.
+      - ./consul_data:/consul/data
+    healthcheck:
+      test: ["CMD", "consul", "members"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    networks:
+      - eapi-net
 
-  # demo-services-server:
-  #   build: demo-services
-  #   ports:
-  #     - "9000:9000"
-  #   environment:
-  #     SERVICE_NAME: "demo-services"
-  #     SERVICE_HOST: "demo-services-server"
-  #     SERVICE_PORT: 9000
-  #     CONSUL_HOST: "consul-server"
-  #     CONSUL_PORT: 8500
-  #   networks:
-  #     - eapi-net
-  #   depends_on:
-  #     - consul-server
+  demo-services-server:
+    build: demo-services
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./demo-services:/app
+    environment:
+      SERVICE_NAME: "demo-services"
+      SERVICE_HOST: "demo-services-server"
+      SERVICE_PORT: 9000
+      CONSUL_HOST: "consul-server"
+      CONSUL_PORT: 8500
+    networks:
+      - eapi-net
+    depends_on:
+      - consul-server
 
-  # iris-server:
-  #   build: iris-server
-  #   ports:
-  #     - "9001:9001"
-  #   environment:
-  #     SERVICE_NAME: "iris"
-  #     SERVICE_HOST: "iris-server"
-  #     SERVICE_PORT: 9001
-  #     CONSUL_HOST: "consul-server"
-  #     CONSUL_PORT: 8500
-  #   networks:
-  #     - eapi-net
-  #   depends_on:
-  #     - consul-server
+  iris-server:
+    build: iris-server
+    ports:
+      - "9001:9001"
+    volumes:
+     - ./iris-server:/app
+    environment:
+      SERVICE_NAME: "iris"
+      SERVICE_HOST: "iris-server"
+      SERVICE_PORT: 9001
+      CONSUL_HOST: "consul-server"
+      CONSUL_PORT: 8500
+    networks:
+      - eapi-net
+    depends_on:
+      - consul-server
 
   # nginx-gateway:
   #   build: nginx
@@ -66,34 +70,36 @@ services:
   #   networks:
   #     - eapi-net
 
-  backend:
-    build: be
-    ports:
-      - "${BACKEND_ENTRY_PORT}:${BACKEND_ENTRY_PORT}"
-    volumes:
-      - ./be:/app
-    environment:
-      FRONTEND_HOST: ${FRONTEND_HOST}
-      FRONTEND_PORT: ${FRONTEND_PORT}
-      THIS_HOST: backend
-      THIS_PORT: ${BACKEND_ENTRY_PORT}
-      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
-      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
-    networks:
-      - eapi-net
+  # backend:
+  #   build: be
+  #   ports:
+  #     - "${BACKEND_ENTRY_PORT}:${BACKEND_ENTRY_PORT}"
+  #   volumes:
+  #     - ./be:/app
+  #   environment:
+  #     FRONTEND_HOST: ${FRONTEND_HOSTNAME}
+  #     FRONTEND_PORT: ${FRONTEND_PORT}
+  #     THIS_HOST: backend
+  #     THIS_PORT: ${BACKEND_ENTRY_PORT}
+  #     GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+  #     GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
+  #   networks:
+  #     - eapi-net
 
-  frontend:
-    build:
-      context: fe
-    ports:
-      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
-    volumes:
-      - ./fe:/app
-    environment:
-      VITE_API_HOST: ${BACKEND_ENTRY_HOST}
-      VITE_API_PORT: ${BACKEND_ENTRY_PORT}
-    networks:
-      - eapi-net
+  # frontend:
+  #   build:
+  #     context: fe
+  #   ports:
+  #     - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+  #   volumes:
+  #     - ./fe:/app
+  #   environment:
+  #     VITE_HOST: frontend
+  #     VITE_PORT: ${FRONTEND_PORT}
+  #     VITE_API_HOST: ${BACKEND_ENTRY_HOSTNAME}
+  #     VITE_API_PORT: ${BACKEND_ENTRY_PORT}
+  #   networks:
+  #     - eapi-net
 
 volumes:
   consul_data:

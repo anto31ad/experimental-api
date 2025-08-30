@@ -136,7 +136,9 @@ const login = () => {
   if (DEV_OPTIONS.stubModeOn) {
     return;
   }
-  window.location.href = `${API_ENDPOINTS.loginWithGitHub}?next_url=http://localhost:3000/login/callback`;
+  const next_url = `${window.location.protocol}//${window.location.host}/login/callback`
+  console.log("Next url after login:", next_url)
+  window.location.href = `${API_ENDPOINTS.loginWithGitHub}?next_url=${next_url}`;
 }
 
 const logout = () => {
@@ -145,7 +147,10 @@ const logout = () => {
   if (DEV_OPTIONS.stubModeOn) {
     return;
   }
-  window.location.href = `${API_ENDPOINTS.logout}?next_url=http://localhost:3000/`;
+
+  const next_url = `${window.location.protocol}//${window.location.host}/`
+  console.log("Next url after logout:", next_url)
+  window.location.href = `${API_ENDPOINTS.logout}?next_url=${next_url}`;
 }
 
 const isAuthenticated = () => {

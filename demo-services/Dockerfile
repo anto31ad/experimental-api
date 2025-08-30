@@ -3,4 +3,4 @@ FROM python:3.11-slim
 WORKDIR /app
 COPY . .
 RUN pip install --no-cache-dir -r requirements.txt
-CMD ["python", "run_demo_services.py"]
+CMD ["python", "run.py"]

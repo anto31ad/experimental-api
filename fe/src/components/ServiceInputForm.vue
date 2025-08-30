@@ -1,7 +1,7 @@
 <template>
   <form v-if="curService && formData" @submit.prevent="submitForm" class="form-grid">
     <div v-for="param in curService.parameters">
-      <label :for="param.name">{{ param.name }} ({{ param.expects }})</label>
+      <label :for="param.name">{{ param.name }} ({{ param.description }})</label>
       <input
         :id="param.name"
         v-model="formData[param.name]"

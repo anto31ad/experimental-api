@@ -3,7 +3,8 @@ import { requests } from '../utils/requests'
 
 export interface ServiceParameter {
   name: string,
-  expects: string,
+  description: string,
+  examples?: Array<JSON>
 }
 
 export interface Service {
