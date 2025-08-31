@@ -20,7 +20,7 @@ services:
       - eapi-net
 
   two-models-service:
-    build: two-models
+    build: ./services/two-models
     ports:
       - "9000:9000"
     volumes:
@@ -37,7 +37,7 @@ services:
       - consul-server
 
   iris-service:
-    build: iris-service
+    build: ./services/iris
     ports:
       - "9001:9001"
     volumes:
