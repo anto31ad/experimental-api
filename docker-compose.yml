@@ -19,15 +19,15 @@ services:
     networks:
       - eapi-net
 
-  demo-services-server:
-    build: demo-services
+  two-models-service:
+    build: two-models
     ports:
       - "9000:9000"
     volumes:
-      - ./demo-services:/app
+      - ./services/two-models:/app
     environment:
-      SERVICE_NAME: "demo-services"
-      SERVICE_HOST: "demo-services-server"
+      SERVICE_NAME: "two-models"
+      SERVICE_HOST: "two-models-service"
       SERVICE_PORT: 9000
       CONSUL_HOST: "consul-server"
       CONSUL_PORT: 8500
@@ -36,15 +36,15 @@ services:
     depends_on:
       - consul-server
 
-  iris-server:
-    build: iris-server
+  iris-service:
+    build: iris-service
     ports:
       - "9001:9001"
     volumes:
-     - ./iris-server:/app
+     - ./services/iris:/app
     environment:
       SERVICE_NAME: "iris"
-      SERVICE_HOST: "iris-server"
+      SERVICE_HOST: "iris-service"
       SERVICE_PORT: 9001
       CONSUL_HOST: "consul-server"
       CONSUL_PORT: 8500
@@ -53,9 +53,9 @@ services:
     depends_on:
       - consul-server
 
-  nginx-gateway:
+  nginx-reverse-proxy:
     build: nginx
-    container_name: nginx-gateway
+    container_name: nginx-reverse-proxy
     ports:
       - "${GATEWAY_PORT}:${GATEWAY_PORT}"
     volumes:
@@ -82,7 +82,7 @@ services:
       FRONTEND_PORT: ${FRONTEND_PORT}
       THIS_HOST: backend
       THIS_PORT: ${BACKEND_ENTRY_PORT}
-      GATEWAY_HOST: nginx-gateway
+      GATEWAY_HOST: nginx-reverse-proxy
       GATEWAY_PORT: ${GATEWAY_PORT}
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
