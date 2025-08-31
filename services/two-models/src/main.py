@@ -76,7 +76,7 @@ async def lifespan(app: FastAPI):
         await deregister_service()
 
 app = FastAPI(
-    title='Experimental API / Demo models',
+    title='Two Models',
     lifespan=lifespan
 )
 
@@ -91,7 +91,7 @@ async def get_service_info():
         "message": HTTPStatus.OK.phrase,
         "status-code": HTTPStatus.OK,
         "data": {
-            'name': 'Demo Services!',
+            'name': 'Two Models',
             'description': "groups two models together: digits and iris",
             "parameters": [
                 {

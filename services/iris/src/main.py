@@ -90,7 +90,7 @@ async def health_check() -> Dict[str, str]:
 async def get_info():
     return {
         'data': {
-            'name': 'Iris Classifier!',
+            'name': 'Iris Classifier',
             'description': 'Classifies into subspecies based on petal and sepal sizes',
             'parameters': [
                 {
