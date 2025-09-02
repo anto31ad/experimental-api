@@ -10,5 +10,3 @@ if not MODELS_DIR.exists():
     os.makedirs(MODELS_DIR)
 
 IRIS_MODEL_FILEPATH = MODELS_DIR / Path('iris_classifier.pkl')
-DIGITS_MODEL_FILEPATH = MODELS_DIR / Path('digit_classifier.pkl')
-DIGITS_EXAMPLE_FILEPATH = DATA_DIR / Path('digit_example.json')
