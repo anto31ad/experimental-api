@@ -228,10 +228,8 @@ async def use_service(
             detail=response.content
         )
 
-    data = response.json()
-
     return {
         "message": HTTPStatus.OK.phrase,
         "status-code": HTTPStatus.OK,
-        "data": data
+        "data": response.json()['data']
     }
