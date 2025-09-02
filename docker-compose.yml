@@ -16,8 +16,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    # networks:
-    #   - eapi-net
 
   two-models-service:
     build: ./services/two-models
@@ -31,8 +29,6 @@ services:
       SERVICE_PORT: 9000
       CONSUL_HOST: "consul-server"
       CONSUL_PORT: 8500
-    # networks:
-    #   - eapi-net
     depends_on:
       - consul-server
 
@@ -48,8 +44,6 @@ services:
       SERVICE_PORT: 9001
       CONSUL_HOST: "consul-server"
       CONSUL_PORT: 8500
-    # networks:
-    #   - eapi-net
     depends_on:
       - consul-server
 
@@ -68,8 +62,6 @@ services:
     depends_on:
       consul-server:
         condition: service_healthy
-    # networks:
-    #   - eapi-net
 
   backend:
     build: be
@@ -86,8 +78,6 @@ services:
       GATEWAY_PORT: ${GATEWAY_PORT}
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
-    # networks:
-    #   - eapi-net
 
   frontend:
     build:
@@ -101,13 +91,7 @@ services:
       VITE_PORT: ${FRONTEND_PORT}
       VITE_API_HOST: ${BACKEND_ENTRY_HOSTNAME}
       VITE_API_PORT: ${BACKEND_ENTRY_PORT}
-    # networks:
-    #   - eapi-net
 
 volumes:
   consul_data:
     driver: local
-
-# networks:
-#   eapi-net:
-#     driver: bridge

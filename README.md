@@ -6,24 +6,13 @@ The goal of the project is to create a system that makes it easy to manage and t
 
 ---
 
-## One-command install with Docker
+## Usage
 
-In the root directory, run
+1. make a copy `.env.sample` and rename it to just `.env`
+2. setup github Oauth App and store the keys in the `.env` (see below)
+3. run the docker compose command (see below)
 
-```sh
-docker compose up
-```
-
-### Clean up
-
-Run
-
-```
-docker compose down
-```
-
-
-## Configuration
+### Github Oauth App
 
 This system leverages GitHub for authentication; thus you need to create a GitHub Oauth App from [your account's settings](https://github.com/settings/developers). 
 
@@ -34,6 +23,22 @@ Assuming you have just cloned the repository, you have to manually create this f
 Start by filling in `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` accordingly.
 
 The other commented lines may be useful later, but they can be ignored for now, since the system will use defaults.
+
+### Install with docker compose
+
+In the root directory, run
+
+```sh
+docker compose up
+```
+
+### Clean up
+
+To clean up run (in the root directory):
+
+```
+docker compose down
+```
 
 ### Api application
 
