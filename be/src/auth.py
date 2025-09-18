@@ -1,15 +1,20 @@
 import os
 
-from authlib.integrations.starlette_client import OAuth
-from starlette.config import Config
+from jose import jwt
+from fastapi import HTTPException, Depends
 
-from fastapi import HTTPException, status, Request
+from . import config
 
-async def is_logged_in(request: Request):
-    
-    session = request.session
-    if not session:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not logged in",
-        )
+async def get_current_user(token: str = Depends(config.oauth2_scheme)):
+    try:
+        # Decode and validate the JWT
+        payload = jwt.decode(token, config.JWT_SECRET_KEY, algorithms=["HS256"])
+        user_data = {
+            "github_id": payload.get("github_id"),
+            "username": payload.get("username")
+        }
+        if not user_data["github_id"]:
+            raise HTTPException(status_code=401, detail="Invalid token payload")
+        return user_data
+    except jwt.JWTError:
+        raise HTTPException(status_code=401, detail="Could not validate credentials")

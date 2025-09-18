@@ -5,15 +5,17 @@ const fetchWithAuth = async (
   url: string,
   payload: RequestInit = {},
 ) => {
+
+  const token = localStorage.getItem('jwt_token');
   const headers = {
     'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`,
     ...payload.headers,
   };
 
   const res = await fetch(url, {
     ...payload,
     headers,
-    credentials: "include"
   });
   return res;
 }
@@ -146,17 +148,19 @@ const logout = () => {
     return;
   }
 
-  const next_url = `${window.location.protocol}//${window.location.host}/`
-  console.log("Next url after logout:", next_url)
-  window.location.href = `${API_ENDPOINTS.logout}?next_url=${next_url}`;
+  localStorage.removeItem('jwt_token')
+  window.location.href = `${window.location.protocol}//${window.location.host}`;
+  
+  // const next_url = `${window.location.protocol}//${window.location.host}/`
+  // console.log("Next url after logout:", next_url)
+  // window.location.href = `${API_ENDPOINTS.logout}?next_url=${next_url}`;
 }
 
 const isAuthenticated = () => {
   if (DEV_OPTIONS.stubModeOn) {
     return true
-  }
-  const storedVar = localStorage.getItem("expAPI_isLoggedIn") === 'true'
-  return storedVar
+  } 
+  return localStorage.getItem("jwt_token") !== null 
 }
 
 export const requests = {

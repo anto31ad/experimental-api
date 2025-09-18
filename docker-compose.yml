@@ -1,6 +1,6 @@
 services:
   consul-server:
-    image: docker.io/hashicorp/consul:latest
+    image: docker.io/hashicorp/consul:1.21.4
     container_name: consul-server
     # Command to run Consul in development mode with UI and accessible client interface
     command: agent -dev -client=0.0.0.0 -bind=0.0.0.0 -ui

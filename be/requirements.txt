@@ -8,3 +8,4 @@ itsdangerous
 scikit-learn
 requests
 py-consul
+python-jose

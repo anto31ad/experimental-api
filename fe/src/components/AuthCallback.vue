@@ -12,6 +12,14 @@ const router = useRouter()
 
 onMounted(async () => {
   try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    if (!token) {
+      console.error("No token found");
+      return;
+    }
+    localStorage.setItem('jwt_token', token);
+
     await userStore.fetchUserData()
     router.replace({ path: '/' })
   } catch (e) {

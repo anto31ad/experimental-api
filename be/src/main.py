@@ -1,32 +1,26 @@
 import logging
 import requests
 
+from typing import Annotated
 from contextlib import asynccontextmanager
 from http import HTTPStatus
-from typing import Annotated
-from pydantic import ValidationError
-
+from jose import jwt
 from starlette.middleware.sessions import SessionMiddleware
-
 from authlib.integrations.starlette_client import OAuth
 
 from fastapi import FastAPI, Depends, HTTPException, Path, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
-from fastapi.security import OAuth2PasswordBearer
 
 from .utils import validate_url, fetch_service_info
 from .auth import (
-    is_logged_in
+    get_current_user
 )
 from .schema import (
-    GitHubUser,
-    Service
+    User,
 )
 
 from . import config
-
-SERVICES_DB: dict[str, Service] = {}
 
 logger = logging.getLogger("uvicorn")
 
@@ -47,7 +41,6 @@ async def lifespan(app: FastAPI):
 
 # setup github oauth app
 oauth = OAuth(config.configDict)
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 oauth.register(
     name='github',
     client_id=config.GITHUB_CLIENT_ID,
@@ -78,12 +71,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# session middleware is needed by oauth
 app.add_middleware(
     SessionMiddleware,
-    secret_key="!secret")  # TODO Use a real secret key in production
+    secret_key=config.JWT_SECRET_KEY)
 
 # ==============================================================
-# GENERAL
+# ROOT
 # ==============================================================
 @app.get("/")
 async def root():
@@ -96,15 +91,14 @@ async def root():
 
 @app.get('/login/github', tags=["Auth"])
 async def login_with_github(request: Request, next_url: str="/docs"):
-
     # try to parse the redirect url
     if not validate_url(next_url, config.ALLOW_ORIGINS):
         logger.error(f"Invalid next_url during login: {next_url}")
         raise HTTPException(status_code=400, detail="Login failed because of invalid redirect URL")
     
     try:
-        request.session['nextUrl'] = next_url
         redirect_uri = request.url_for('github_auth_callback')
+        request.session['targetUrl'] = next_url
         return await oauth.github.authorize_redirect(request, redirect_uri)
     except Exception as exc:
         logger.error(f"GitHub login error: {exc}")
@@ -123,48 +117,32 @@ async def github_auth_callback(request: Request):
             "github_id": github_user_data["id"],
             "username": github_user_data["login"],
         }
-        request.session['user'] = user_data
+        # Generate a JWT token
+        jwt_token = jwt.encode(
+            user_data,
+            config.JWT_SECRET_KEY,
+            algorithm="HS256"
+            # TODO token lifetime    
+        )
 
-        next_url = request.session.pop('nextUrl', '/docs')
+        # construct redirect response
+        target_url = request.session['targetUrl']
+        full_target_url = f"{target_url}?token={jwt_token}"
         return RedirectResponse(
-            url=next_url)
+            url=full_target_url)
+
     except Exception as exc:
         logger.error(f"GitHub callback error: {exc}")
         raise HTTPException(status_code=401, detail='GitHub denied authentication') 
 
-@app.get('/logout', tags=["Auth"])
-async def logout(request: Request, next_url: str = '/docs'):
-    
-    # try to parse the redirect url
-    if not validate_url(next_url, config.ALLOW_ORIGINS):
-        logger.error(f"Invalid next_url during logout: {next_url}")
-        raise HTTPException(status_code=400, detail="Logout failed because of invalid redirect URL")
-
-    try:
-        request.session.clear()
-        response = RedirectResponse(url=next_url)
-        response.delete_cookie('session')
-        return response
-    except Exception as exc:
-        logger.error(f"logout error: {exc}")
-        raise HTTPException(status_code=400, detail='Something failed during logout') 
-       
-
 # ==============================================================
 # USERS
 # ==============================================================
-@app.get("/users/me", tags=["Users"], dependencies=[Depends(is_logged_in)])
-async def read_current_user(request: Request):
-    user = request.session['user']
-    if not user:
-        raise HTTPException(f"session has no information about current user")
-    return GitHubUser(
-        # using a str cast to sanitize values;
-        # e.g. the github user id is a integer, but GitHubUser wants a str 
-        username=str(user["username"]),
-        github_id=str(user["github_id"]),
-    )
-
+@app.get("/users/me", tags=["Users"])
+async def read_current_user(
+    current_user: Annotated[User, Depends(get_current_user)]
+):
+    return current_user
 
 
 # ==============================================================
@@ -175,8 +153,10 @@ async def read_current_user(request: Request):
 #       However, it is needed for calling Depends, which in turn enforces authentication,
 #       this makes sure that only verified users can call this method
 
-@app.get("/services", tags=["Services"], dependencies=[Depends(is_logged_in)])
-async def list_available_services():
+@app.get("/services", tags=["Services"])
+async def list_available_services(
+    current_user: Annotated[User, Depends(get_current_user)]
+):
 
     try:    
         services_response: dict = requests.get(f'{config.GATEWAY_PROCESS}/services').json()
@@ -194,11 +174,10 @@ async def list_available_services():
         "data": services_list
     }
 
-@app.get("/services/{service_id}",
-         tags=["Services"],
-         dependencies=[Depends(is_logged_in)])
+@app.get("/services/{service_id}", tags=["Services"])
 async def get_service_info(
     service_id: str,
+    current_user: Annotated[User, Depends(get_current_user)]
 ):
     service_info: dict | None = fetch_service_info(service_id)
     if not service_info:
@@ -213,15 +192,12 @@ async def get_service_info(
         "data": service_info
     }
 
-@app.post("/services/{service_id}",
-          tags=["Services"],
-          dependencies=[Depends(is_logged_in)])
+@app.post("/services/{service_id}", tags=["Services"])
 async def use_service(
     service_id: str,
     payload: dict,
+    current_user: Annotated[User, Depends(get_current_user)]
 ):
-    
-    logger.info(payload)
     response = requests.post(
         url=f'{config.GATEWAY_PROCESS}/{service_id}/use',
         json=payload)
