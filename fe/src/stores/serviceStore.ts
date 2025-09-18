@@ -32,6 +32,9 @@ export const useServiceStore = defineStore('service', {
         service => (service.id === state.selectedServiceId)
       )
     },
+    getServiceById: (state) => (id: string) => {
+      return state.services.find(service => (service.id === id))
+    },
     findServiceIndex: (state) => (id: string) => {
       return state.services.findIndex(service => (service.id === id))
     },

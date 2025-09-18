@@ -1,6 +1,6 @@
 <template>
   <form v-if="curService && formData" @submit.prevent="submitForm" class="form-grid">
-    <div v-for="param in curService.parameters">
+    <div v-for="param in props.curService.parameters">
       <label :for="param.name">{{ param.name }}</label>
       <textarea
         :id="param.name"
@@ -13,27 +13,30 @@
 </template>
 
 <script setup lang="ts">
-import { storeToRefs } from 'pinia';
+import type { Service } from '@/stores/serviceStore';
 import { onMounted, ref } from 'vue';
 import { useServiceStore } from '@/stores/serviceStore';
 
 const serviceStore = useServiceStore()
-const { selectedService: curService } = storeToRefs(serviceStore)
 
 const formData = ref()
 
+const props = defineProps<{
+  curService: Service
+}>()
+
 onMounted(()=> {
-  if (curService.value?.parameters) {
+  if (props.curService?.parameters) {
     formData.value = Object.fromEntries(
-      curService.value.parameters.map(param => [param.name, null])
+      props.curService.parameters.map(param => [param.name, null])
     )
   }
 })
 
 function submitForm() {
-  if (curService.value?.id){
+  if (props.curService?.id){
     serviceStore.makeServiceRequest(
-      curService.value?.id, JSON.parse(JSON.stringify(formData.value))
+      props.curService?.id, JSON.parse(JSON.stringify(formData.value))
     )
   }
 }

@@ -3,7 +3,7 @@
     <h1>{{ curService.name }}</h1>
     <p> {{ curService.description }}</p>
     <hr/>
-    <ServiceInputForm/>
+    <ServiceInputForm :cur-service="curService"/>
     <div v-if="responseData">
       <hr/>
       <h3>Response:</h3>
@@ -23,7 +23,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, watchEffect } from 'vue';
+import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 
 import { useServiceStore } from '@/stores/serviceStore';
@@ -33,7 +33,11 @@ const route = useRoute()
 const serviceStore = useServiceStore()
 
 const curService = computed(() => {
-  return serviceStore.selectedService
+  let serviceId = route.params.id
+  if (Array.isArray(serviceId)) {
+    serviceId = serviceId[0]
+  }
+  return serviceStore.getServiceById(serviceId)
 })
 
 const responseData = computed(() => {
@@ -48,14 +52,6 @@ const responseData = computed(() => {
   }
   console.log(dataStr)
   return dataStr
-})
-
-watchEffect(async () => {
-  let serviceId = route.params.id
-  if (Array.isArray(serviceId)) {
-    serviceId = serviceId[0]
-  }
-  serviceStore.selectService(serviceId)
 })
 </script>
 

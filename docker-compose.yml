@@ -17,15 +17,15 @@ services:
       timeout: 5s
       retries: 5
 
-  two-models-service:
-    build: ./services/two-models
+  digits-service:
+    build: ./services/digits
     ports:
       - "9000:9000"
     volumes:
-      - ./services/two-models:/app
+      - ./services/digits:/app
     environment:
-      SERVICE_NAME: "two-models"
-      SERVICE_HOST: "two-models-service"
+      SERVICE_NAME: "digits"
+      SERVICE_HOST: "digits-service"
       SERVICE_PORT: 9000
       CONSUL_HOST: "consul-server"
       CONSUL_PORT: 8500
@@ -42,6 +42,21 @@ services:
       SERVICE_NAME: "iris"
       SERVICE_HOST: "iris-service"
       SERVICE_PORT: 9001
+      CONSUL_HOST: "consul-server"
+      CONSUL_PORT: 8500
+    depends_on:
+      - consul-server
+
+  echo-service:
+    build: ./services/echo
+    ports:
+      - "9002:9002"
+    volumes:
+     - ./services/echo:/app
+    environment:
+      SERVICE_NAME: "echo"
+      SERVICE_HOST: "echo-service"
+      SERVICE_PORT: 9002
       CONSUL_HOST: "consul-server"
       CONSUL_PORT: 8500
     depends_on:
