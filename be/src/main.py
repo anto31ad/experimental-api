@@ -13,14 +13,14 @@ from authlib.integrations.starlette_client import OAuth
 from fastapi import FastAPI, Depends, HTTPException, Path, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
+from fastapi.security import OAuth2PasswordBearer
 
 from .utils import validate_url, fetch_service_info
 from .auth import (
-    integrate_github_auth,
-    get_current_github_user,
+    is_logged_in
 )
 from .schema import (
-    User,
+    GitHubUser,
     Service
 )
 
@@ -47,7 +47,16 @@ async def lifespan(app: FastAPI):
 
 # setup github oauth app
 oauth = OAuth(config.configDict)
-integrate_github_auth(oauth, config.configDict)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth.register(
+    name='github',
+    client_id=config.GITHUB_CLIENT_ID,
+    client_secret=config.GITHUB_CLIENT_SECRET,
+    access_token_url='https://github.com/login/oauth/access_token',
+    authorize_url='https://github.com/login/oauth/authorize',
+    api_base_url='https://api.github.com/',
+    client_kwargs={'scope': 'user:email'},
+)
 
 # setup FastAPI app
 app = FastAPI(
@@ -95,7 +104,7 @@ async def login_with_github(request: Request, next_url: str="/docs"):
     
     try:
         request.session['nextUrl'] = next_url
-        redirect_uri = request.url_for('auth_callback')
+        redirect_uri = request.url_for('github_auth_callback')
         return await oauth.github.authorize_redirect(request, redirect_uri)
     except Exception as exc:
         logger.error(f"GitHub login error: {exc}")
@@ -103,7 +112,7 @@ async def login_with_github(request: Request, next_url: str="/docs"):
 
 
 @app.get('/auth/github', tags=["Auth"])
-async def auth_callback(request: Request):
+async def github_auth_callback(request: Request):
     try:
         token = await oauth.github.authorize_access_token(request)
         github_response = await oauth.github.get('user', token=token)
@@ -144,11 +153,18 @@ async def logout(request: Request, next_url: str = '/docs'):
 # ==============================================================
 # USERS
 # ==============================================================
-@app.get("/users/me", tags=["Users"])
-async def read_current_user(
-    current_user: Annotated[User, Depends(get_current_github_user)]
-):
-    return current_user
+@app.get("/users/me", tags=["Users"], dependencies=[Depends(is_logged_in)])
+async def read_current_user(request: Request):
+    user = request.session['user']
+    if not user:
+        raise HTTPException(f"session has no information about current user")
+    return GitHubUser(
+        # using a str cast to sanitize values;
+        # e.g. the github user id is a integer, but GitHubUser wants a str 
+        username=str(user["username"]),
+        github_id=str(user["github_id"]),
+    )
+
 
 
 # ==============================================================
@@ -159,10 +175,8 @@ async def read_current_user(
 #       However, it is needed for calling Depends, which in turn enforces authentication,
 #       this makes sure that only verified users can call this method
 
-@app.get("/services", tags=["Services"])
-async def list_available_services(
-    current_user: Annotated[str, Depends(get_current_github_user)]
-):
+@app.get("/services", tags=["Services"], dependencies=[Depends(is_logged_in)])
+async def list_available_services():
 
     try:    
         services_response: dict = requests.get(f'{config.GATEWAY_PROCESS}/services').json()
@@ -180,9 +194,10 @@ async def list_available_services(
         "data": services_list
     }
 
-@app.get("/services/{service_id}")
+@app.get("/services/{service_id}",
+         tags=["Services"],
+         dependencies=[Depends(is_logged_in)])
 async def get_service_info(
-    current_user: Annotated[str, Depends(get_current_github_user)],
     service_id: str,
 ):
     service_info: dict | None = fetch_service_info(service_id)
@@ -198,9 +213,10 @@ async def get_service_info(
         "data": service_info
     }
 
-@app.post("/services/{service_id}")
+@app.post("/services/{service_id}",
+          tags=["Services"],
+          dependencies=[Depends(is_logged_in)])
 async def use_service(
-    current_user: Annotated[str, Depends(get_current_github_user)],
     service_id: str,
     payload: dict,
 ):

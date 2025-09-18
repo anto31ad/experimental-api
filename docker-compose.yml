@@ -92,7 +92,3 @@ services:
       VITE_API_HOST: backend
       VITE_API_PORT: ${BACKEND_PORT}
       VITE_STUB_MODE: ${FRONTEND_STUB_MODE}
-
-volumes:
-  consul_data:
-    driver: local

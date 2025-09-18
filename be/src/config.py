@@ -3,6 +3,9 @@ from starlette.config import Config
 # load environment variables
 configDict = Config('.env')
 
+GITHUB_CLIENT_ID = configDict.get('GITHUB_CLIENT_ID')
+GITHUB_CLIENT_SECRET = configDict.get("GITHUB_CLIENT_SECRET")
+
 FRONTEND_HOST = configDict.get('FRONTEND_HOST', default='localhost')
 FRONTEND_PORT = int(configDict.get('FRONTEND_PORT', default=3000))
 FRONTEND_PROCESS: str = f"http://{FRONTEND_HOST}:{FRONTEND_PORT}"
