@@ -13,7 +13,6 @@ const router = useRouter()
 onMounted(async () => {
   try {
     await userStore.fetchUserData()
-    localStorage.setItem("expAPI_isLoggedIn", "true")
     router.replace({ path: '/' })
   } catch (e) {
     console.error(e)

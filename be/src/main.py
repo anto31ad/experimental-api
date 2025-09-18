@@ -13,7 +13,6 @@ from authlib.integrations.starlette_client import OAuth
 from fastapi import FastAPI, Depends, HTTPException, Path, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
-from fastapi.staticfiles import StaticFiles
 
 from .utils import validate_url, fetch_service_info
 from .auth import (
@@ -38,19 +37,12 @@ async def lifespan(app: FastAPI):
 
     Used to load the database into memory.
     """
-    #global SERVICES_DB
-
-    logger.info("Loading database...")
-    # SERVICES_DB = db.load_services(logger)
-
     logger.info(f"be: {config.THIS_PROCESS}")
     logger.info(f"fe: {config.FRONTEND_PROCESS}")
 
     yield
 
-    logger.info("Saving database...")
-    # db.save_services(logger, SERVICES_DB)
-
+    logger.info("Shutting down...")
 
 
 # setup github oauth app
@@ -80,9 +72,6 @@ app.add_middleware(
 app.add_middleware(
     SessionMiddleware,
     secret_key="!secret")  # TODO Use a real secret key in production
-
-    # mount static files directory
-app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # ==============================================================
 # GENERAL

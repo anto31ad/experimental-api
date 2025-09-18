@@ -17,9 +17,11 @@ GATEWAY_PROCESS = f"http://{GATEWAY_HOST}:{GATEWAY_PORT}"
 
 ALLOW_ORIGINS = [
     FRONTEND_PROCESS,
-    # f"http://localhost:{FRONTEND_PORT}",
-    f"http://192.168.1.208:{FRONTEND_PORT}",
+    f"http://localhost:{FRONTEND_PORT}",
+    f"http://127.0.0.1:{FRONTEND_PORT}",
+    # f"http://192.168.1.208:{FRONTEND_PORT}",
     THIS_PROCESS,
-    # f"http://localhost:{THIS_PORT}",
+    f"http://localhost:{THIS_PORT}",
+    f"http://127.0.0.1:{THIS_PORT}",
     # f"http://192.168.1.208:{THIS_PORT}",
 ]

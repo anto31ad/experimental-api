@@ -142,8 +142,6 @@ const login = () => {
 }
 
 const logout = () => {
-  localStorage.setItem("expAPI_isLoggedIn", 'false');
-
   if (DEV_OPTIONS.stubModeOn) {
     return;
   }

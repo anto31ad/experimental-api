@@ -66,14 +66,14 @@ services:
   backend:
     build: be
     ports:
-      - "${BACKEND_ENTRY_PORT}:${BACKEND_ENTRY_PORT}"
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
     volumes:
       - ./be:/app
     environment:
-      FRONTEND_HOST: ${FRONTEND_HOSTNAME}
+      FRONTEND_HOST: frontend
       FRONTEND_PORT: ${FRONTEND_PORT}
       THIS_HOST: backend
-      THIS_PORT: ${BACKEND_ENTRY_PORT}
+      THIS_PORT: ${BACKEND_PORT}
       GATEWAY_HOST: nginx-reverse-proxy
       GATEWAY_PORT: ${GATEWAY_PORT}
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
@@ -89,8 +89,9 @@ services:
     environment:
       VITE_HOST: frontend
       VITE_PORT: ${FRONTEND_PORT}
-      VITE_API_HOST: ${BACKEND_ENTRY_HOSTNAME}
-      VITE_API_PORT: ${BACKEND_ENTRY_PORT}
+      VITE_API_HOST: backend
+      VITE_API_PORT: ${BACKEND_PORT}
+      VITE_STUB_MODE: ${FRONTEND_STUB_MODE}
 
 volumes:
   consul_data:
