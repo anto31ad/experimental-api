@@ -1,0 +1,7 @@
+{
+    "project_name": "hello-world",
+    "codename": "hello-world",
+    "port": 9000,
+    "title": "Hello world!",
+    "description": "greets the user"
+}

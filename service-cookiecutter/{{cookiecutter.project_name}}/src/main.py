@@ -90,8 +90,8 @@ async def health_check() -> Dict[str, str]:
 async def get_info():
     return {
         'data': {
-            'name': SERVICE_NAME,
-            'description': 'Example of microservice',
+            'name': '{{cookiecutter.title}}',
+            'description': '{{cookiecutter.description}}',
             'parameters': [
                 {
                     "name": "example_parameter",
