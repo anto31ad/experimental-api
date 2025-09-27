@@ -1,0 +1,176 @@
+import { API_ENDPOINTS, DEV_OPTIONS } from '@/constants'
+import type { Service } from '@/stores/serviceStore'
+
+const fetchWithAuth = async (
+  url: string,
+  payload: RequestInit = {},
+) => {
+
+  const token = localStorage.getItem('jwt_token');
+  const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`,
+    ...payload.headers,
+  };
+
+  const res = await fetch(url, {
+    ...payload,
+    headers,
+  });
+  return res;
+}
+
+const requestListOfServices = async (): Promise<string[]> => {
+
+  if (DEV_OPTIONS.stubModeOn) {
+    const res = await fetch(DEV_OPTIONS.stubServicesPath);
+    const servicesList = await res.json();
+    return servicesList;
+  }
+
+  const res = await fetchWithAuth(
+    API_ENDPOINTS.services,
+    {
+      method: 'GET',
+    }
+  )
+  if (!res.ok) {
+    throw new Error(`Failed to fetch services: ${res.statusText}`);
+  }
+  const obj = await res.json()
+  return obj.data
+};
+
+const requestRandomPictureUrl = async () => {
+  
+  try {
+    const thumbnailRes = await fetch('https://picsum.photos/400/200');
+  
+    if(!thumbnailRes.ok) {
+      return null;
+    }
+    return thumbnailRes.url;
+  } catch {
+    return null;
+  }
+}
+
+const getThumbnail = async (url: string) => {
+
+  try {
+    const res = await fetch(url)
+    if (!res.ok) {
+      return null
+    }
+    return res.url
+  } catch {
+    return null
+  } 
+}
+
+const requestServiceInfoById = async (serviceId: string): Promise<Service> => {
+
+  if (DEV_OPTIONS.stubModeOn) {
+    const response = await fetch(DEV_OPTIONS.stubServicesPath);
+    const servicesList = await response.json();
+
+    const candidate = servicesList.find((item: Service) => item.id.toString() == serviceId)
+
+    if (candidate) {
+      return candidate
+    }
+    throw new Error(`Service with id '${serviceId}' not found in stub data`);
+  }
+
+  const res = await fetchWithAuth(
+    `${API_ENDPOINTS.services}/${serviceId}`,
+    {
+      method: 'GET',
+    }
+  )
+  if (!res.ok) {
+    throw new Error(`Failed to fetch service with id '${serviceId}': ${res.statusText}`);
+  }
+  const obj = await res.json()
+  return obj.data;
+};
+
+const requestOperationByServiceId = async (
+  serviceId: string,
+  payload: JSON) => {
+
+  if (DEV_OPTIONS.stubModeOn) {
+    const response = await fetch(DEV_OPTIONS.stubServicesPath);
+    const servicesList = await response.json();
+    const candidate = servicesList.find((item: Service) => item.id.toString() == serviceId)
+    if (candidate) {
+      return {
+        'message': 'Success!',
+      }
+    }
+    throw new Error(`Service with id '${serviceId}' not found in stub data`);
+  }
+
+  const res = await fetchWithAuth(
+    `${API_ENDPOINTS.services}/${serviceId}`,
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+  )
+  if (!res.ok) {
+    throw Error(`Request to service ${serviceId} was unsuccesful: ${res.statusText}`)
+  }
+  const obj = await res.json()
+  return obj.data;
+};
+
+const requestThisUser = async () => {
+  const res = await fetchWithAuth(API_ENDPOINTS.thisUser)
+  if (!res.ok) {
+    return null
+  }
+  const user = await res.json();
+  return user
+}
+
+const login = () => {
+  if (DEV_OPTIONS.stubModeOn) {
+    return;
+  }
+  const next_url = `${window.location.protocol}//${window.location.host}/login/callback`
+  console.log("Next url after login:", next_url)
+  window.location.href = `${API_ENDPOINTS.loginWithGitHub}?next_url=${next_url}`;
+}
+
+const logout = () => {
+  if (DEV_OPTIONS.stubModeOn) {
+    return;
+  }
+
+  localStorage.removeItem('jwt_token')
+  window.location.href = `${window.location.protocol}//${window.location.host}`;
+  
+  // const next_url = `${window.location.protocol}//${window.location.host}/`
+  // console.log("Next url after logout:", next_url)
+  // window.location.href = `${API_ENDPOINTS.logout}?next_url=${next_url}`;
+}
+
+const isAuthenticated = () => {
+  if (DEV_OPTIONS.stubModeOn) {
+    return true
+  } 
+  return localStorage.getItem("jwt_token") !== null 
+}
+
+export const requests = {
+  requestListOfServices,
+  requestRandomPictureUrl,
+  requestServiceInfoById,
+  requestOperationByServiceId,
+  requestThisUser,
+  login,
+  logout,
+  isAuthenticated,
+  getThumbnail
+};

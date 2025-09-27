@@ -1,6 +1,3 @@
-# Python
-.venv/
-__pycache__/
-
-# Config
+consul_data
 .env
+__pycache__

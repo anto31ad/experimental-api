@@ -1,0 +1,11 @@
+fastapi[standard]
+uvicorn
+authlib
+python-dotenv
+starlette
+pydantic
+itsdangerous
+scikit-learn
+requests
+py-consul
+python-jose

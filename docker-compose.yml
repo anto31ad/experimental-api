@@ -1,0 +1,109 @@
+services:
+  consul-server:
+    image: docker.io/hashicorp/consul:1.21.4
+    container_name: consul-server
+    # Command to run Consul in development mode with UI and accessible client interface
+    command: agent -dev -client=0.0.0.0 -bind=0.0.0.0 -ui
+    ports:
+      - "8500:8500" # HTTP API and UI
+      - "8600:8600/udp" # DNS interface (UDP)
+    volumes:
+      # Optional: Persist Consul's data if you stop/start the container.
+      # Remove this line and the 'volumes:' section at the bottom if you don't need persistence for development.
+      - ./consul_data:/consul/data
+    healthcheck:
+      test: ["CMD", "consul", "members"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  digits-service:
+    build: ./services/digits
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./services/digits:/app
+    environment:
+      SERVICE_NAME: "digits"
+      SERVICE_HOST: "digits-service"
+      SERVICE_PORT: 9000
+      CONSUL_HOST: "consul-server"
+      CONSUL_PORT: 8500
+    depends_on:
+      - consul-server
+
+  iris-service:
+    build: ./services/iris
+    ports:
+      - "9001:9001"
+    volumes:
+     - ./services/iris:/app
+    environment:
+      SERVICE_NAME: "iris"
+      SERVICE_HOST: "iris-service"
+      SERVICE_PORT: 9001
+      CONSUL_HOST: "consul-server"
+      CONSUL_PORT: 8500
+    depends_on:
+      - consul-server
+
+  echo-service:
+    build: ./services/echo
+    ports:
+      - "9002:9002"
+    volumes:
+     - ./services/echo:/app
+    environment:
+      SERVICE_NAME: "echo"
+      SERVICE_HOST: "echo-service"
+      SERVICE_PORT: 9002
+      CONSUL_HOST: "consul-server"
+      CONSUL_PORT: 8500
+    depends_on:
+      - consul-server
+
+  nginx-reverse-proxy:
+    build: nginx
+    container_name: nginx-reverse-proxy
+    ports:
+      - "${GATEWAY_PORT}:${GATEWAY_PORT}"
+    volumes:
+      - ./nginx/nginx.conf.ctmpl:/etc/consul-template/templates/nginx.conf.ctmpl
+    environment:
+      # Tell Consul-Template where to find Consul
+      CONSUL_HOST: consul-server
+      CONSUL_PORT: 8500
+      NGINX_PORT: ${GATEWAY_PORT}
+    depends_on:
+      consul-server:
+        condition: service_healthy
+
+  backend:
+    build: be
+    ports:
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
+    volumes:
+      - ./be:/app
+    environment:
+      FRONTEND_HOST: frontend
+      FRONTEND_PORT: ${FRONTEND_PORT}
+      THIS_HOST: backend
+      THIS_PORT: ${BACKEND_PORT}
+      GATEWAY_HOST: nginx-reverse-proxy
+      GATEWAY_PORT: ${GATEWAY_PORT}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
+
+  frontend:
+    build:
+      context: fe
+    ports:
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+    volumes:
+      - ./fe:/app
+    environment:
+      VITE_HOST: frontend
+      VITE_PORT: ${FRONTEND_PORT}
+      VITE_API_HOST: backend
+      VITE_API_PORT: ${BACKEND_PORT}
+      VITE_STUB_MODE: ${FRONTEND_STUB_MODE}

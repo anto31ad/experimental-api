@@ -1,0 +1,49 @@
+worker_processes  auto;
+error_log  /var/log/nginx/error.log warn;
+pid        /var/run/nginx.pid;
+
+events {
+    worker_connections  1024;
+}
+
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+    sendfile        on;
+    keepalive_timeout  65;
+    
+    # This block is dynamically generated for every service registered in Consul
+    # 'services' returns a list of all unique service names.
+    {{range services}}
+    upstream {{.Name}} {
+        # 'service .Name' returns all healthy instances for that service.
+        {{range service .Name}}
+        server {{.Address}}:{{.Port}};
+        {{else}}
+        # Fallback if no instances are registered for this service
+        server 127.0.0.1:65535; # forces a 502 Bad Gateway
+        {{end}}
+    }
+    {{end}}
+
+    server {
+        listen {{ env "NGINX_PORT" }};
+        server_name localhost;
+
+        # This single location block handles all dynamic routing.
+        # It maps the URL path (e.g., /demo-services) to the upstream name.
+        location ~ ^/(?<upstream_name>[^/]+)(?<service_path>/.*)?$ {
+
+            set $proxy_path $service_path;
+            if ($proxy_path = "") {
+                set $proxy_path "/";
+            }
+
+            proxy_pass http://$upstream_name$proxy_path;
+        }
+
+        location = /services {
+            proxy_pass http://consul-server:8500/v1/agent/services;
+        }
+    }
+}
