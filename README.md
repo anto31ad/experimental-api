@@ -56,10 +56,10 @@ docker compose down
 
 ## Usage
 
-Assuming to 
-To use the EAPI UI, connect to [http://localhost:3000](http://localhost:3000) (assuming `FRONTEND_PORT=3000`).
+Once the system is running:
 
-To use the Consul UI (the register), connect to [http://localhost:8500](http://localhost:8500)
+- To use the UI, connect to [http://localhost:3000](http://localhost:3000) (assuming `FRONTEND_PORT=3000`).
+- To use the register's UI (Consul UI), connect to [http://localhost:8500](http://localhost:8500).
 
 ## Licence
 
