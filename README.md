@@ -1,36 +1,50 @@
 # Experimental API 
 
-This is the graduation project for my Bachelor degree.
+*Experimental API* (*EAPI*) is the graduation project for my Bachelor degree.
 
-The goal of the project is to create a system that makes it easy to manage and test multiple AI models served through the Internet.
+## Goals
 
----
+EAPI attempts to create a easy-to-use and uniform interface to support the task of adding, removing and interacting with Machine Learning models over the Internet. 
 
-## Usage
+## Architecture
 
-1. make a copy `.env.sample` and rename it to just `.env`
-2. setup github Oauth App and store the keys in the `.env` (see below)
-3. run the docker compose command (see below)
+In order to achieve its goals, EAPI makes use of the microservices architectural style; its main components are shown in the following diagram:
+
+![EAPI architecture](./docs/eapi-architecture.jpg)
+
+
+## Installation
 
 ### Github Oauth App
 
 This system leverages GitHub for authentication; thus you need to create a GitHub Oauth App from [your account's settings](https://github.com/settings/developers). 
 
-During the process, you will be assigned a *client ID* and a *secret key*; this data needs to be stored in a file called `.env`, placed in the project directory.
+During the process, you will be assigned a *client ID* and a *secret key*; this data is needed for the next step.
 
-Assuming you have just cloned the repository, you have to manually create this file; use `.env.sample` for reference. 
+### Environment Variables
 
-Start by filling in `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` accordingly.
+Assuming you have just cloned the repository, you have to manually create a file `.env` to configure the basic environment variables needed to run the system; use `.env.sample` as a template.
 
-The other commented lines may be useful later, but they can be ignored for now, since the system will use defaults.
+Start by filling in `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` variables using the information obtained during the previous step.
 
-### Install with docker compose
+The other variables can be left as they are or deleted altogether, since the system will use defaults.
 
-In the root directory, run
+
+## Run
+
+To run the system, in the root directory run the following command
 
 ```sh
 docker compose up
 ```
+
+and wait for all sub-systems to start up.
+
+The first run will take longer than the next ones, since several dependencies will need to be installed (no input required).
+
+### Stopping
+
+To stop the system, press `CTRL+C` inside the terminal the docker compose command was run from and wait for all subsystems to shut down gracefully.
 
 ### Clean up
 
@@ -40,48 +54,12 @@ To clean up run (in the root directory):
 docker compose down
 ```
 
-### Api application
+## Usage
 
-This application is the core component of experimental-api.
+Assuming to 
+To use the EAPI UI, connect to [http://localhost:3000](http://localhost:3000) (assuming `FRONTEND_PORT=3000`).
 
-To run it:
-
-1. Open a terminal
-2. Navigate to the project directory
-3. enter the venv
-4. run the following command
-
-```python
-python run_api.py
-```
-
-> To stop the process, use `CTRL+C`, any key combination specific to your OS.
-
-Now you have two options:
-
-- (a) use the API through the built-in tool (Swagger)
-- (b) use the API through the front-end
-
-Read the sections below for details.
-
-#### 1. Use the API through Swagger
-
-1. go to [localhost:8000/docs](http://localhost:8000/docs)
-2. authenticate with GitHub by going to [localhost:8000/login/github](http://localhost:8000/login/github) and following the instructions
-3. choose any operation and follow the instructions to test it
-4. have fun!
-
-To logout, go to [localhost:8000/logout](http://localhost:8000/logout);
-
-#### 2. Use the API through the frontend
-
-At that point:
-
-1. re-read the instructions in this document to make sure everything is setup correctly.
-2. To log in, tap to the login button in the `/login` page
-3. Have fun with the web app!
-
-
+To use the Consul UI (the register), connect to [http://localhost:8500](http://localhost:8500)
 
 ## Licence
 
