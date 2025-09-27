@@ -8,10 +8,16 @@ EAPI attempts to create a easy-to-use and uniform interface to support the task 
 
 ## Architecture
 
-In order to achieve its goals, EAPI makes use of the microservices architectural style; its main components are shown in the following diagram:
+In order to achieve its goals, EAPI makes use of the microservices architecture; its main components are shown in the following diagram:
 
 ![EAPI architecture](./docs/eapi-architecture.jpg)
 
+It's important to note that, as of now, there's a name mismatch between some components shown in the diagram and their counter parts in the codebase; with respect to the `docker-compose.yml` config file:
+
+- *Entrypoint* is called *backend*; its source code resides in the `be/` directory.
+- *Reverse Proxy* is called *nginx gateway*; its configuration files reside in the `nginx/` directory.
+- *Register* is called *consul server*;
+- *User Interface* is called *frontend*; its source code resides in the `fe/` directory.
 
 ## Installation
 
