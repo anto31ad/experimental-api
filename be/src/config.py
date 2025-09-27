@@ -1,14 +1,13 @@
 from starlette.config import Config
 from fastapi.security import OAuth2PasswordBearer
 
-JWT_SECRET_KEY = "stub-secret"
-
 # load environment variables
 configDict = Config('.env')
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 GITHUB_CLIENT_ID = configDict.get('GITHUB_CLIENT_ID')
 GITHUB_CLIENT_SECRET = configDict.get("GITHUB_CLIENT_SECRET")
+JWT_SECRET_KEY = configDict.get("JWT_SECRET_KEY", default='stub-secret')
 
 FRONTEND_HOST = configDict.get('FRONTEND_HOST', default='localhost')
 FRONTEND_PORT = int(configDict.get('FRONTEND_PORT', default=3000))
