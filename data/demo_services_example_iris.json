@@ -1,9 +1,0 @@
-{
-    "model_id": "iris",
-    "model_input": {
-        "petal_length": 0,
-        "petal_width": 0,
-        "sepal_length": 0,
-        "sepal_width": 0
-    }
-}
