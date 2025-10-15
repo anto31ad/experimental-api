@@ -15,7 +15,7 @@ FRONTEND_PROCESS: str = f"http://{FRONTEND_HOST}:{FRONTEND_PORT}"
 
 THIS_HOST = configDict.get('THIS_HOST', default='localhost')
 THIS_PORT = int(configDict.get('THIS_PORT', default=80))
-THIS_PROCESS: str = f"http://{THIS_HOST}:{THIS_PORT}"
+THIS_PROCESS: str = f"http://localhost:{THIS_PORT}"
 
 GATEWAY_HOST = configDict.get('GATEWAY_HOST', default='localhost')
 GATEWAY_PORT = int(configDict.get('GATEWAY_PORT', default=8000))

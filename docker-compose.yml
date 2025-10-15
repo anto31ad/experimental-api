@@ -104,6 +104,6 @@ services:
     environment:
       VITE_HOST: frontend
       VITE_PORT: ${FRONTEND_PORT}
-      VITE_API_HOST: backend
+      VITE_API_HOST: localhost
       VITE_API_PORT: ${BACKEND_PORT}
       VITE_STUB_MODE: ${FRONTEND_STUB_MODE}
